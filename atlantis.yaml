@@ -1,33 +1,44 @@
 version: 3
 automerge: true
+parallel_apply: true
+parallel_plan: true
 projects:
+  - &template_ci_cd
+    dir: template_ci_cd
+    workflow: terragrunt
+    autoplan:
+      enabled: false
+      when_modified:
+        - "../../../../../../../../../modules/accelerator/**/*.tf"
+        - "**/*.hcl"
+  - &template_infra
+    dir: template_infra
+#    apply_requirements: [approved]
+    workflow: terragrunt
+    autoplan:
+      enabled: false
+      when_modified:
+        - "../../../../../../../../modules/application-infrastructure/**/*.tf"
+        - "**/*.hcl"
 
-- dir: terragrunt_way/applications/py_application
-  workflow: terragrunt
-  autoplan:
-    when_modified: [ "../../../modules/**/*.tf", "../../common_vars.yml", "application_vars.yml", "terragrunt.hcl" ]
-    enabled: false
+  - <<: *template_ci_cd
+    dir: terragrunt-infrastructure-live/accelerator/accounts/accelerator/regions/eu-central-1/applications/goapp/ci-cd
 
-- dir: terragrunt_way/applications/go_application
-  workflow: terragrunt
-  autoplan:
-    when_modified: [ "../../../modules/**/*.tf", "../../common_vars.yml", "application_vars.yml", "terragrunt.hcl" ]
-    enabled: false
-
-- dir: terragrunt_way/applications/java_application
-  workflow: terragrunt
-  autoplan:
-    when_modified: [ "../../../modules/**/*.tf", "../../common_vars.yml", "application_vars.yml", "terragrunt.hcl" ]
-    enabled: false
+  - <<: *template_infra
+    dir: terragrunt-infrastructure-live/application-infrastructure/goapp/accounts/dev-qa-uat/regions/eu-central-1/infrastructure-module
 
 # https://www.runatlantis.io/docs/server-side-repo-config.html#allow-repos-to-define-their-own-workflows
 workflows:
   terragrunt: #================= Terragrunt Workflow =============================#
     plan:
       steps:
+      # change branches
         - env:
             name: BASE_BRANCH_NAME
-            value: main
+            value: master
+        - env:
+            name: HEAD_BRANCH_NAME
+            value: develop
         - env:
             name: DESTROY_PARAMETER
             command: if [ "$COMMENT_ARGS" = "\-\d\e\s\t\r\o\y" ]; then echo "-destroy"; else echo ""; fi
@@ -35,24 +46,14 @@ workflows:
             name: TF_VAR_auth_token
             command: 'aws ssm get-parameter --name "/vcs/user/token" --with-decryption | jq .Parameter.Value -r'
         - env:
-            name: TF_VAR_sonarcloud_token
-            command: 'aws ssm get-parameter --name "/sonar/token" --with-decryption | jq .Parameter.Value -r'
-        - env:
-            name: TF_VAR_teams_web_hook
-            command: 'aws ssm get-parameter --name "/teams/web/hook" --with-decryption | jq .Parameter.Value -r'
-        - env:
-            name: TF_VAR_slack_web_hook
-            command: 'aws ssm get-parameter --name "/slack/web/hook" --with-decryption | jq .Parameter.Value -r'
-        - env:
             name: INFRACOST_API_KEY
             command: 'aws ssm get-parameter --name "/infracost/api/key" --with-decryption | jq .Parameter.Value -r'
-
+        - env:
+            name: OPENAI_TOKEN
+            command: 'aws ssm get-parameter --name "/accelerator/openai_token" --with-decryption | jq .Parameter.Value -r'
         - env:
             name: INFRACOST
             value: 1
-        - env: # If you want to use tflint, set the value to 1, otherwise 0.
-            name: TFLINT
-            value: 0
         - env: # If you want to use tfsec, set the value to 1, otherwise 0.
             name: TFSEC
             value: 0
@@ -62,30 +63,52 @@ workflows:
         - env: # If you want to use regula, set the value to 1, otherwise 0.
             name: REGULA
             value: 1
+        - env: # If we enable AI Handler
+            name: AI_HANDLER
+            value: 1
 
-        - run: atlantis version || true
-        - run: terraform version || true
+        - run: atlantis version
+        - run: terraform version
         - run: infracost --version
-        - run: terragrunt validate
-        - run: terragrunt plan -out $PLANFILE $DESTROY_PARAMETER
-        - run: terragrunt show -json $PLANFILE > $SHOWFILE
-        - run: if [ $TFLINT == 1 ];
+        - run: pip3 --version
+        - run: python --version
+        - run: pip3 install virtualenv && python3 -m venv error_handeling
+        - run: source error_handeling/bin/activate && echo $VIRTUAL_ENV
+        - run: pip3 install -r /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/requirements.txt
+        - run: terragrunt validate -no-color 2> error_raw.log || cat error_raw.log | grep -v "validate_tflint" > error.log
+        - run: if [ -s "error.log" ];
             then
-            echo "------ tflint report ------" && tflint --module; echo "-------------------------------------";
+            echo "Error log print" && cat error.log;
             fi
-
+        - run: if [ $AI_HANDLER == 1 ] && [ -s "error.log" ];
+            then
+            echo "Validate issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py && exit 1;
+            fi
+        - run: terragrunt plan -out $PLANFILE $DESTROY_PARAMETER -no-color 2> error_raw.log || cat error_raw.log | grep -v "validate_tflint" > error.log
+        - run: if [ -s "error.log" ];
+            then
+            echo "Error log print" && cat error.log;
+            fi
+        - run: if [ $AI_HANDLER == 1 ] && [ -s "error.log" ];
+            then
+            echo "Plan issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py;
+            fi
+        - run: terragrunt show -json $PLANFILE > $SHOWFILE
         - run: if [ $CHECKOV == 1 ];
             then
             echo "------ Checkov Report ------" && checkov -d . --quiet; echo "-------------------------------------";
             fi
-
         - run: if [ $TFSEC == 1 ];
             then
             echo "------ TFSec Report ------" && tfsec --no-colour --soft-fail --concise-output --exclude AWS005 . ; echo "-------------------------------------";
             fi
         - run: if [ $REGULA == 1 ];
             then
-            echo "------ Regula Report ------" &&  regula run  -t tf-plan $SHOWFILE ; echo "-------------------------------------";
+            echo "------ Regula Report ------" && regula run -t tf-plan $SHOWFILE > regula_report.log && regula_report.log || cat regula_report.log && echo "-------------------------------------";
+            fi
+        - run: if [ $AI_HANDLER == 1 ] && [ -s "regula_report.log" ] && ! grep -q "No problems found" regula_report.log;
+            then
+            python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/regula_analyzer.py;
             fi
         - run: if [ $INFRACOST == 1 ];
             then
@@ -94,19 +117,6 @@ workflows:
 
     apply:
       steps:
-        - env:
-            name: TF_VAR_auth_token
-            command: 'aws ssm get-parameter --name "/vcs/user/token" --with-decryption | jq .Parameter.Value -r'
-        - env:
-            name: TF_VAR_sonarcloud_token
-            command: 'aws ssm get-parameter --name "/sonar/token" --with-decryption | jq .Parameter.Value -r'
-        - env:
-            name: TF_VAR_teams_web_hook
-            command: 'aws ssm get-parameter --name "/teams/web/hook" --with-decryption | jq .Parameter.Value -r'
-        - env:
-            name: TF_VAR_slack_web_hook
-            command: 'aws ssm get-parameter --name "/slack/web/hook" --with-decryption | jq .Parameter.Value -r'
-
         - env: # If you want to use cloud custodian, set the value to 1, otherwise 0.
             name: CUSTODIAN
             value: 0
@@ -129,7 +139,19 @@ workflows:
         - env:
             name: ACCOUNT_NAME
             value: atlantis
-        - run: terragrunt apply $PLANFILE
+        - env:
+            name: OPENAI_TOKEN
+            command: 'aws ssm get-parameter --name "/accelerator/openai_token" --with-decryption | jq .Parameter.Value -r'
+
+        - run: terragrunt apply $PLANFILE -no-color 2> error_raw.log || cat error_raw.log | grep -v "validate_tflint" > error.log
+        - run: if [ -s "error.log" ];
+            then
+            echo "Error log print" && cat error.log;
+            fi
+        - run: if [ $AI_HANDLER == 1 ] && [ -s "error.log" ];
+            then
+            echo "Apply issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts/ai_analyzer.py;
+            fi
         - run: if [ $CUSTODIAN == 1 ];
             then
             echo "------ Cloud Custodian Report ------" && custodian run --output-dir=. /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/custodian.yml && echo "-------------------------------------";

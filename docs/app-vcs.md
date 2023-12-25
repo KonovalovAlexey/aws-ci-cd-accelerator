@@ -8,7 +8,7 @@ The Application can be hosted on these Code Hosting platforms:
 
 <hr>
 
-To configure the application pipeline, copy the configuration file [../terragrunt_way/aplications/exaple_aplication/application_vars.yml](../terragrunt_way/applications/example_application/application_vars.yml) to `terragrunt_way/aplications/<"Aplication">/application_vars.yaml`.
+To configure the application pipeline, copy the configuration file [terragrunt_way/aplications/exaple_aplication/application_vars.yml](../terragrunt_way/applications/example_application/application_vars.yml) to `terragrunt_way/aplications/<"Aplication">/application_vars.yaml`.
 Fill in all the necessary variables, according to the required pipeline configuration.
 
 

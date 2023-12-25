@@ -39,7 +39,7 @@ resource "aws_cloudwatch_event_target" "build_target_fail" {
 
 # for successful events
 resource "aws_cloudwatch_event_rule" "build_success" {
-  count = var.build_success ? 1 : 0
+  count         = var.build_success ? 1 : 0
   name          = "${var.repo_name}-${var.region_name}-build-status-success"
   event_pattern = <<PATTERN
   {
@@ -59,9 +59,9 @@ resource "aws_cloudwatch_event_rule" "build_success" {
 }
 
 resource "aws_cloudwatch_event_target" "build_target_success" {
-  count = var.build_success ? 1 : 0
+  count     = var.build_success ? 1 : 0
   rule      = aws_cloudwatch_event_rule.build_success[0].name
-  target_id = "SendToSNS"
+  target_id = "SendCodebuildStateToSNS"
   arn       = aws_sns_topic.notif.arn
   input_transformer {
     input_paths = {
@@ -72,8 +72,8 @@ resource "aws_cloudwatch_event_target" "build_target_success" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "pipeline_state" {
-  name = "${var.repo_name}-${var.region_name}-pipeline-state"
+resource "aws_cloudwatch_event_rule" "pipeline_state_start" {
+  name = "${var.repo_name}-${var.region_name}-pipeline-start-success"
 
   event_pattern = <<PATTERN
 {
@@ -87,8 +87,6 @@ resource "aws_cloudwatch_event_rule" "pipeline_state" {
     "pipeline": ["${var.codepipeline_name}"],
     "state": [
       "STARTED",
-      "FAILED",
-      "CANCELED",
       "SUCCEEDED"
     ]
   }
@@ -96,15 +94,52 @@ resource "aws_cloudwatch_event_rule" "pipeline_state" {
 PATTERN
 }
 
-resource "aws_cloudwatch_event_target" "pipeline_state" {
-  rule      = aws_cloudwatch_event_rule.pipeline_state.name
-  target_id = "SendPipeStateToSNS"
+resource "aws_cloudwatch_event_target" "pipeline_state_start" {
+  rule      = aws_cloudwatch_event_rule.pipeline_state_start.name
+  target_id = "SendPipeStartStateToSNS"
   arn       = aws_sns_topic.notif.arn
   input_transformer {
     input_paths = {
-      pipeline-name          ="$.detail.pipeline",
-      pipeline-state         ="$.detail.state",
+      pipeline-name  = "$.detail.pipeline",
+      pipeline-state = "$.detail.state",
     }
     input_template = "\"Pipeline **<pipeline-name>** has status <pipeline-state>.\""
   }
 }
+resource "aws_cloudwatch_event_rule" "pipeline_state_finish" {
+  name = "${var.repo_name}-${var.region_name}-pipeline-finish"
+
+  event_pattern = <<PATTERN
+{
+  "source": [
+    "aws.codepipeline"
+  ],
+  "detail-type": [
+    "CodePipeline Action Execution State Change"
+  ],
+  "detail": {
+    "pipeline": ["${var.codepipeline_name}"],
+    "state": [
+      "FAILED",
+      "CANCELED"
+    ]
+  }
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_target" "pipeline_state_finish" {
+  rule      = aws_cloudwatch_event_rule.pipeline_state_finish.name
+  target_id = "SendPipeFinishStateToSNS"
+  arn       = aws_sns_topic.notif.arn
+  input_transformer {
+    input_paths = {
+      pipeline-name  = "$.detail.pipeline",
+      pipeline-state = "$.detail.state",
+      action         = "$.detail.action"
+    }
+    input_template = "\"Pipeline **<pipeline-name>** has status **<pipeline-state>**, action: **<action>**.\""
+  }
+}
+
+

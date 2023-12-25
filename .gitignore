@@ -17,7 +17,7 @@ credentials
 /out
 /proguard
 /target
-**/node_modules
+#**/node_modules
 **/target
 *.iml
 *.brackets.json
@@ -61,9 +61,14 @@ infra/ansible/roles/test/*
 tf.out
 **/.terraform.lock.hcl
 **/.terragrunt-cache/*
-**/gitlab.tfvars
-terragrunt_way/parameter_store.yml
+# Sensetive Parameter Store
+**/parameter_store.hcl
+**/app_parameter_store.hcl
+error.log
+error_raw.log
 
+# Python virtual environment libraries
+**/error_handeling
 
-
-
+# Regula log file #
+regula_report.log

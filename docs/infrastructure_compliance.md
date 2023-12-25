@@ -23,7 +23,7 @@ Several `AWS Config rules` are specified to check whether the resource is `compl
   * Windows-EC2-managedinstance-applications-required - checks if `Windows EC2 instances` have the necessary software installed
   * Linux-EC2-managedinstance-applications-required - checks if `Linux EC2 instances` have the necessary software installed  
 
-You can receive an `email` notification about a `not-compliant` resource, [email_addresses](../terragrunt_way/applications/example_application/application_vars.yml). You can specify the email addresses to which these notifications will be sent.  
+You can receive an `email` notification about a `not-compliant` resource, [email_addresses](../terragrunt-infrastructure-example/accelerator/accounts/accelerator/regions/example/core/env.hcl). You can specify the email addresses to which these notifications will be sent.  
 
 Once every `24 hours` the snapshot with the history of your infrastructure will be sent to the `S3 bucket`.
 
@@ -31,7 +31,7 @@ Once every `24 hours` the snapshot with the history of your infrastructure will 
 
 Tracks `User Activity` and `API Usage`. 
 
-Optionally, you can specify the trail as `multi-region` by setting its value to `true` [here](../terragrunt_way/applications/example_application/application_vars.yml).
+Optionally, you can specify the trail as `multi-region` by setting its value to `true` [here](../terragrunt_way/applications/example_application/application.tfvars).
 
 All `API calls` are logged and written to the `S3 bucket`.  
 
@@ -39,4 +39,4 @@ Modifications(deletions/updates) to the `S3 bucket` objects and `Lambda` functio
 
 If you don't have enough time to wait until `CloudTrail` puts logs into the `S3 bucket`, you can monitor the `API usage` in near real-time using `CloudWatch Log groups` by selecting the created `Log group` and created `Log stream`.  
 
-Also, you can receive an `email` notification when `CloudTrail` puts logs into the `S3 bucket. The email address to receive this notification is specified [here](../terragrunt_way/applications/example_application/application_vars.yml).
+Also, you can receive an `email` notification when `CloudTrail` puts logs into the `S3 bucket. The email address to receive this notification is specified [here](../terragrunt_way/applications/example_application/application.tfvars).

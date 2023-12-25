@@ -219,19 +219,26 @@ resource "aws_cloudtrail" "cloudtrail" {
 resource "aws_s3_bucket" "cloudtrail_bucket" {
   bucket        = "${var.organization_name}-cloudtrail-${local.account_id}-${var.region}"
   force_destroy = var.force_destroy
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.cloudtrail_kms_key.id
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
-  versioning {
-    enabled = var.versioning
-  }
+
   tags = {
     Name = "CloudTrail bucket"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.cloudtrail_kms_key.id
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "cloudtrail" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+  versioning_configuration {
+    status = var.versioning
   }
 }
 
@@ -257,16 +264,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail" {
   }
 }
 
-resource "aws_s3_bucket_acl" "versioning_bucket_acl" {
+resource "aws_s3_bucket_acl" "bucket_acl" {
   bucket = aws_s3_bucket.cloudtrail_bucket.id
   acl    = "private"
-}
-
-resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.cloudtrail_bucket.id
-  versioning_configuration {
-    status = "Enabled"
-  }
 }
 
 #----------------------------#

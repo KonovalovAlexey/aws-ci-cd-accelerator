@@ -6,9 +6,10 @@
 * [Infrastructure deployment](docs/infra.md)
   * [Manual](docs/infra.md#manual)
   * [Semi-automatic](docs/infra.md#semi-automatic)
-* [Terraform Linters](docs/linters.md)
-  * [Infracost](docs/linters.md#infracost)
-  * [TFSec](docs/linters.md#TFSec)
+* [Terraform Code Analysis Tools](docs/linters.md)
+* [CI/CD](docs/cicd.md)
+  * [Continuous Integration](docs/cicd.md#continuous-integration)
+  * [Continuous Delivery](docs/cicd.md#continuous-delivery)
 * [Distributed Load Testing on AWS Provisioning](docs/dlt.md)
   * [Architecture overview](docs/dlt.md#architecture-overview)
   * [DLT deployment](docs/dlt.md#dlt-deployment)
@@ -16,12 +17,7 @@
 * [Infrastructure Compliance](docs/infrastructure_compliance.md)
   * [AWS Config](docs/infrastructure_compliance.md#aws-config)
   * [AWS CloudTrail](docs/infrastructure_compliance.md#aws-cloudtrail)
-* [CI/CD](docs/cicd.md)
-  * [Continuous Integration](docs/cicd.md#continuous-integration)
-  * [Continuous Delivery](docs/cicd.md#continuous-delivery)
 * [Notifications](docs/notifications.md)
-  * [Email](docs/notifications.md#email)
-  * [Microsoft Teams and Slack](docs/notifications.md#microsoft-teams-and-slack)
 * [Pull Request Analysis](docs/PRanalysis.md)
   * [GitHub/Bitbucket Pull Requests](docs/PRanalysis.md#githubbitbucket-pull-requests)
   * [CodeCommit Pull Requests](docs/PRanalysis.md#codecommit-pull-requests)
@@ -100,9 +96,10 @@ The Accelerator supports:
 * [Infracost](https://www.infracost.io/), cloud cost estimation tool for Terraform in pull requests
 * [Report Portal](https://reportportal.io/) is a service that provides increased capabilities to speed up results analysis and reporting using built-in analytic features.
 
-To test CI/CD workflow Java and Golang applications can be used:
+To test CI/CD workflow Java, Golang and Python applications can be used:
 * [java Spring Boot based application](https://github.com/spring-projects/spring-petclinic)
 * [golang task tracker](https://github.com/thewhitetulip/Tasks)
+* [python blog application](https://github.com/mazuraktaras/jwtblogpyapp)
 
 ## Further reading
 

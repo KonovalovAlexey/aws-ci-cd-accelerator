@@ -16,5 +16,10 @@ variable "region" {
   type = string
 }
 
-variable "force_destroy" {}
-variable "versioning" {}
+variable "force_destroy" {
+  type = bool
+}
+variable "versioning" {
+  type = string
+  default = "Enabled"
+}

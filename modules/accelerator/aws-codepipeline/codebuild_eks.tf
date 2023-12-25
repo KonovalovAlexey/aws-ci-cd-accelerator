@@ -20,7 +20,7 @@ resource "aws_codebuild_project" "build_deploy_to_eks" {
     compute_type    = var.build_compute_type
     image           = var.build_image
     type            = "LINUX_CONTAINER"
-    privileged_mode = var.build_privileged_override
+    privileged_mode = false
 
     environment_variable {
       name  = "AWS_ACCOUNT_ID"
@@ -47,33 +47,13 @@ resource "aws_codebuild_project" "build_deploy_to_eks" {
       value = var.environments[count.index]
     }
     environment_variable {
-      name  = "SUBNETS"
-      value = join("\\, ", var.cluster_public_subnet_ids)
-    }
-    environment_variable {
-      name  = "SECURITY_GROUPS"
-      value = join("\\, ", var.cluster_security_groups)
-    }
-    environment_variable {
-      name  = "HEALTH_PATH"
-      value = var.health_path
-    }
-    environment_variable {
-      name  = "TARGET_PORT"
-      value = var.target_port
-    }
-    environment_variable {
       name  = "IMAGE_REPO_NAME"
-      value = var.image_repo_name
+      value = var.ecr_repo_name
     }
-    environment_variable {
-      name  = "REPLICAS"
-      value = var.desired_capacity[count.index]
-    }
-    environment_variable {
-      name  = "CERTIFICATE_ARN"
-      value = var.cluster_acm_certificate_arn
-    }
+#    environment_variable {
+#      name  = "REPLICAS"
+#      value = var.desired_capacity[count.index]
+#    }
     environment_variable {
       name  = "HELM_CHART"
       value = var.helm_chart
@@ -119,84 +99,4 @@ resource "aws_codebuild_project" "build_deploy_to_eks" {
   }
 }
 
-#========================================= ECR Repo ===========================================#
-resource "aws_ecr_repository" "ecr-repo" {
-  count                = var.target_type == "eks" || var.target_type == "kube_cluster" ? 1 : 0
-  name                 = "${var.repo_name}-${var.region_name}"
-  image_tag_mutability = "MUTABLE"
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-  force_delete = true
-}
 
-resource "aws_ecr_repository_policy" "ecr_repository_policy" {
-  count      = var.target_type == "eks" || var.target_type == "kube_cluster" ? 1 : 0
-  repository = aws_ecr_repository.ecr-repo[0].name
-
-  policy = <<EOF
-{
-    "Version": "2008-10-17",
-    "Statement": [
-        {
-            "Sid": "new policy",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:PutImage",
-                "ecr:InitiateLayerUpload",
-                "ecr:UploadLayerPart",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeRepositories",
-                "ecr:GetRepositoryPolicy",
-                "ecr:ListImages",
-                "ecr:DeleteRepository",
-                "ecr:BatchDeleteImage",
-                "ecr:SetRepositoryPolicy",
-                "ecr:DeleteRepositoryPolicy"
-            ]
-        }
-    ]
-}
-EOF
-}
-
-resource "aws_ecr_lifecycle_policy" "ecr_image_policies" {
-  count      = var.target_type == "eks" || var.target_type == "kube_cluster" ? 1 : 0
-  repository = aws_ecr_repository.ecr-repo[0].name
-  policy     = <<EOF
-{
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Expire images older than 14 days",
-            "selection": {
-                "tagStatus": "untagged",
-                "countType": "sinceImagePushed",
-                "countUnit": "days",
-                "countNumber": 14
-            },
-            "action": {
-                "type": "expire"
-            }
-        },
-        {
-            "rulePriority": 2,
-            "description": "Keep last 10 images",
-            "selection": {
-                "tagStatus": "tagged",
-                "tagPrefixList": ["v"],
-                "countType": "imageCountMoreThan",
-                "countNumber": 10
-            },
-            "action": {
-                "type": "expire"
-            }
-        }
-    ]
-}
-EOF
-}

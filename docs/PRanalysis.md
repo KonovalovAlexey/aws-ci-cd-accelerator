@@ -1,8 +1,8 @@
 <h1 align="center"> SonarCloud Pull Request Analisis </h1> 
 
-* [GitHub/Bitbucket Pull Requests](./PRanalysis.md#GitHub/bitbucket-Pull-Requests)
-* [CodeCommit Pull Requests](./PRanalysis.md#codeCommit-Pull-Requests)
-* [GitLab Merge requests](./PRanalysis.md#gitLab-Merge-requests)
+* [GitHub/Bitbucket Pull Requests](./PRanalysis.md#GitHub/bitbucket-pull-requests)
+* [CodeCommit Pull Requests](./PRanalysis.md#codecommit-pull-requests)
+* [GitLab Merge requests](./PRanalysis.md#gitlab-merge-requests)
 
 <hr>
 
@@ -11,32 +11,10 @@ For now, we support PR analysis with GitHub, Bitbucket and CodeCommit.
 
 ## GitHub/Bitbucket Pull Requests 
 
-![PR_bitbucket_github](pic/PR_analysis_github_bitbucket.png) 
+Set variable `sonarcloud_token` in [app_parameter_store.hcl](../terragrunt-infrastructure-example/accelerator/accounts/accelerator/regions/example/setup_folder/applications/example/app_parameter_store_example.hcl) file to connect with Sonar:
 
-Terragrunt will create a CodeBuild project with the application repository configuration. For this, you need to properly fill in only the parameters corresponding to your project's VCS in the `terragrunt_way/parameter_store.tfvars` file:
 
-for
-
-**Bitbucket**
-```
-#*********************** For BitBucket **********************4****#
-bitbucket_user                = "" # BitBucket technical user
-atlantis_bitbucket_user_token = "" # BitBucket technical user token
-atlantis_bitbucket_base_url   = "" # BitBucket base URL
-```
-
-for
-
-**GitHub**
-```
-#************************* For Github ***************************#
-github_user                   = "" # GitHub technical user
-atlantis_github_user_token    = "" # GitHub technical user token
-organization_name             = "" # GitHub organization name
-```
-
-Please check again that the `terragrunt way/parameter store.tfvars` file is in the `.gitignore` file for the project!!!
-See this [quick start guide](../docs/SonarCloud_configuration.md) if you've set up Accelerator from scratch and don't have a SonarCloud organization.
+See this [quick start guide](../docs/SonarCloud_configuration.md) if you don't have a SonarCloud organization.
 If you're adding a new app to Accelerator, check if it has the SonarCloud app in your Installed GitHub apps.
 
 ![sonarcloud_pra_1](pic/sonarcloud_pra_1.png)
@@ -61,6 +39,10 @@ GitHub:
 Bitbucket:  
 
 ![BitbucketPR](pic/bitbucket_PR_feedback.png)
+
+### Sonar AI Handler
+* **If you want that Sonar issues will be processed by Open AI Handler, `openai_token` variable should be set in [parameter_store.hcl](../terragrunt-infrastructure-example/parameter_store_example.hcl)**
+* More about AI Handler see [**here**](../docs/AI/quality_gate_error_handler.md).
 
 <hr>
 
@@ -89,16 +71,26 @@ After the analysis, you will get a similar output in your pull request window (A
 
 ![PR_bitbucket_github](pic/PR_analysis_gitlab.png) 
 
-Unlike previous options, GitLab VCS does not natively interact with AWS CodePipeline, so Terragrunt will perform the configuration in GitLab CI in the application repository. To do this, fill in the parameters in the terragrunt_way/parameter_store.tfvars file accordingly:
+* GitLab VCS does not natively interact with AWS CodePipeline, so we will perform the Sonar test analysis using GitLab CI in the application repository. To do this, fill in the parameters for AWS-GITLAB Integration section in the [app_parameter_store.hcl](../terragrunt-infrastructure-example/accelerator/accounts/accelerator/regions/example/setup_folder/applications/example/app_parameter_store_example.hcl) file accordingly:
+
 **GitLab**
 ```
-#************************* For GitLab ***************************#
-gitlab_user                   = "" # GitLab technical user
-atlantis_gitlab_user_token    = "" # GitLab technical user token
-atlantis_gitlab_hostname      = "" # GitLab hostname URL
-project_id                    = "" # GitLab project id
+# ===================== AWS-GITLAB Integration ====================#
+  #   Define these variables if your application is hosted on GitLab #
+  # ======================== GitLab Block ===========================#
+  gitlab_hostname = ""
+  project_id      = ""
+  aws_user_name   = ""
+  gitlab_token    = ""
+  gitlab_user     = ""
+  app_language    = "go" # "python", "java"
+
+  #============================= PR Sonar ============================#
+  sonarcloud_token = "" # Token for SonarCloud.
 ```
-Please check again that the `terragrunt way/parameter store.tfvars` file is in the `.gitignore` file for the project!!!
+
 After the analysis you will get a similar output in your pull request window.
 
 ![CodeCommitPR](pic/PR_analysis_gl9.png)
+
+#### [Previous page](./cicd.md)

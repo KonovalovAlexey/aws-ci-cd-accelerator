@@ -1,34 +1,92 @@
-#!/usr/bin/env python
-import datetime
-import hashlib
-import hmac
 import json
 import os
 import traceback
-from time import time, sleep
-
+from time import sleep
 import boto3
+import requests
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import ReadOnlyCredentials
-import requests
-
+# Import additional modules required for Report Portal integration
 from reportportal_client import RPClient
 from reportportal_client.helpers import timestamp
 
 
 def my_error_handler(exc_info):
-    """
-    This callback function will be called by async service client when error occurs.
-    Return True if error is not critical, and you want to continue work.
-    :param exc_info: result of sys.exc_info() -> (type, value, traceback)
-    :return:
-    """
     print("Error occurred: {}".format(exc_info[1]))
     traceback.print_exception(*exc_info)
 
 
-# Function for the Report Portal integration
+def aws_sign_4_request(method, url, creds, region, payload=None, headers=None):
+    request = AWSRequest(method=method, url=url, data=json.dumps(payload) if payload else None, headers=headers)
+    SigV4Auth(creds, "execute-api", region).add_auth(request)
+    response = requests.request(method=method, url=url, headers=dict(request.headers), data=request.data)
+    response.raise_for_status()
+    return response.json()
+
+
+def create_test_scenario_payload(test_type, target_url, region, test_id, test_name, task_count, concurrency, ramp_up,
+                                 hold_for):
+    execution = [
+        {
+            "ramp-up": ramp_up,
+            "hold-for": hold_for,
+            "scenario": test_name
+        }
+    ]
+    simple_scenario = {
+        "execution": execution,
+        "scenarios": {
+            test_name: {
+                "requests": [
+                    {
+                        "url": target_url,
+                        "method": "GET",
+                        "body": {},
+                        "headers": {}
+                    }
+                ]
+            }
+        }
+    }
+
+    jmeter_scenario = {
+        "execution": execution,
+        "scenarios": {
+            test_name: {
+                "script": f"{test_id}.jmx"
+            }
+        }
+    }
+
+    scenario = simple_scenario if test_type == "simple" else jmeter_scenario
+    payload = {
+        "testId": test_id,
+        "testName": test_name,
+        "testDescription": test_name,
+        "testTaskConfigs": [
+            {
+                "region": region,
+                "taskCount": int(task_count),
+                "concurrency": int(concurrency)
+            }
+        ],
+        "testScenario": scenario,
+        "showLive": json.loads("false"),  # Set showLive to false with correct JSON syntax
+        "testType": test_type,
+        "regionalTaskDetails": {
+            region: {
+
+            }
+        },
+    }
+    if test_type == "jmeter":
+        payload["fileType"] = "script"
+
+    return payload
+
+
+# Define the 'report_portal' function
 def report_portal(endpoint,
                   project,
                   token,
@@ -46,7 +104,7 @@ def report_portal(endpoint,
                       api_key=token)
     client.start()
 
-    launch = client.start_launch(
+    client.start_launch(
         name=launch_name,
         start_time=timestamp(),
         description=launch_doc,
@@ -54,15 +112,15 @@ def report_portal(endpoint,
 
     item_id = client.start_test_item(
         name="DLT-Test",
-        description=f"DLT-Test: [WEB UI](https://{dlt_alias}/details/{dlt_test_id})",
+        description=f"DLT-Test-UI: [https://{dlt_alias}/details/{dlt_test_id}](https://{dlt_alias}/details/{dlt_test_id})",
         start_time=timestamp(),
         item_type="STEP",
         parameters={
             "Expected Success Rate": expected_success_rate,
-             "Success Rate": success_rate,
-             "ERRORS": errors,
-             "P95 Result": p95_0,
-             "SUCCESS_P95": success_p95_0,
+            "Success Rate": success_rate,
+            "ERRORS": errors,
+            "P95 Result": p95_0,
+            "SUCCESS_P95": success_p95_0,
         },
     )
 
@@ -75,17 +133,7 @@ def report_portal(endpoint,
     client.terminate()
 
 
-# Function to sign AWS request using AWS Signature Version 4
-def aws_sign_4_request(method, url, creds, region, payload=None, headers=None):
-    request = AWSRequest(method=method, url=url, data=json.dumps(payload) if payload else None, headers=headers)
-    SigV4Auth(creds, "execute-api", region).add_auth(request)
-    response = requests.request(method=method, url=url, headers=dict(request.headers), data=request.data)
-    response.raise_for_status()
-    return response.json()
-
-
 def main():
-    # Get environment variables
     host = os.environ.get('DLT_API_HOST').split('/')[2]
     dlt_alias = os.environ.get('DLT_ALIAS')
     region = os.environ.get('AWS_REGION')
@@ -95,13 +143,21 @@ def main():
     client_id = os.environ.get('COGNITO_CLIENT_ID')
     identity_pool_id = os.environ.get('COGNITO_IDENTITY_POOL_ID')
     client = boto3.client('cognito-idp', region_name=region)
+    test_type = os.environ.get('TEST_TYPE', 'simple')  # Default test type is 'simple'
+    test_id = os.environ.get('TEST_ID')
+    test_name = os.environ.get('TEST_NAME')
+    app_target_url = os.environ.get('APP_TARGET_URL')
+    task_count = os.environ.get('TASK_COUNT')
+    concurrency = os.environ.get('CONCURRENCY')
+    ramp_up = os.environ.get('RAMP_UP')
+    hold_for = os.environ.get('HOLD_FOR')
 
     # Report Portal
     endpoint = os.environ.get('RP_ENDPOINT')
     project = os.environ.get('RP_PROJECT')
-    token = os.environ.get('RP_TOKEN_NAME')  # You can get UUID from user profile page in the Report Portal.
-    launch_name = os.environ.get('RP_LAUNCH_NAME')
-    launch_doc = os.environ.get('RP_LAUNCH_DOC')
+    token = os.environ.get('RP_TOKEN')  # You can get UUID from user profile page in the Report Portal.
+    launch_name = test_name
+    launch_doc = test_name
 
     # Initiate authentication
     response = client.initiate_auth(
@@ -112,6 +168,7 @@ def main():
         },
         ClientId=client_id,
     )
+
     id_token = response['AuthenticationResult']['IdToken']
     cognito_identity_client = boto3.client('cognito-identity')
 
@@ -121,7 +178,7 @@ def main():
         IdentityPoolId=identity_pool_id,
         Logins={
             id_p: id_token
-        }
+        },
     )
 
     identity_id = result['IdentityId']
@@ -133,16 +190,9 @@ def main():
         },
     )
 
-    # Load and modify the DLT test scenario
-    with open('dlt_test.json', 'r') as file:
-        payload = json.load(file)
-    payload['testScenario']['scenarios']['DLT-test']['requests'][0]['url'] = os.environ.get('APP_TARGET_URL')
-    payload['testTaskConfigs'][0]['region'] = os.environ.get('AWS_REGION')
-    new_key = os.environ.get('AWS_REGION')
-    task_region = payload['regionalTaskDetails'].pop('task-region')
-    payload['regionalTaskDetails'][new_key] = task_region
+    payload = create_test_scenario_payload(test_type, app_target_url, region, test_id, test_name, task_count,
+                                           concurrency, ramp_up, hold_for)
 
-    # POST request to create a new test
     url = f"https://{host}/prod/scenarios"
     creds = ReadOnlyCredentials(
         result['Credentials']['AccessKeyId'], result['Credentials']['SecretKey'],
@@ -168,7 +218,7 @@ def main():
 
         sleep(20)
 
-        # GET request to poll test status
+        # GET request to pull test status
         response = aws_sign_4_request(
             method='GET',
             url=f"{url}/{test_id}",
@@ -184,14 +234,14 @@ def main():
     if response['status'] == 'complete':
 
         p95_0 = response['results']['total']['p95_0']
-        success_p95_0 = os.environ.get('SUCCESS_P95')
-        expected_success_rate = os.environ.get('EXPECT_SUCCESS_RATE')
+        success_p95_0 = os.environ.get('SUCCESS_P95', '1')  # Default to 1sec if not set
+        expected_success_rate = os.environ.get('EXPECT_SUCCESS_RATE', '95')
         errors = response['results']['total']['fail']
         total = response['results']['total']['throughput']
 
         if total > 0:
             success_rate = int(100 - errors * 100 / total)
-            if float(p95_0) <= float(success_p95_0):
+            if p95_0 is not None and float(p95_0) <= float(success_p95_0):
                 print(
                     f'Test {test_id} passed successfully due to response time 95th percentile ({p95_0} < {success_p95_0})')
 
@@ -233,4 +283,5 @@ def main():
         '\n' + f'For more information about the test, please, refer to the DLT WEB UI https://{dlt_alias}/details/{test_id}')
 
 
-main()
+if __name__ == "__main__":
+    main()

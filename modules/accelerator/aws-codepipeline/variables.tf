@@ -7,21 +7,19 @@ variable "vpc_id" {}
 variable "private_subnet_ids" {
   type = list(string)
 }
-variable "public_subnet_ids" {
-  type = list(string)
-}
+
 variable "security_groups" {
   type = list(string)
 }
 
 variable "organization_name" {
-  description = "The organization name provisioning the template (e.g. pets)"
+  description = "The organization name for Sonar"
 }
 variable "repo_name" {
   description = "The name of the GitHub/Bitbucket/CodeCommit repository (e.g. new-repo)."
 }
 variable "repo_default_branch" {
-  description = "The name of the default repository branch (default: main)"
+  description = "The name of the default repository branch (default: master)"
 }
 variable "build_timeout" {
   description = "The time to wait for a CodeBuild to complete before timing out in minutes (default: 5)"
@@ -32,30 +30,25 @@ variable "build_compute_type" {
 variable "build_image" {
   description = "The build image for CodeBuild to use (default: aws/codebuild/standard:4.0)"
 }
-variable "build_privileged_override" {
-  description = "Set the build privileged override to 'false' if you are not using a CodeBuild supported Docker base image. This is only relevant to building Docker images"
-}
-variable "test_buildspec" {
-  description = "The buildspec to be used for the Test stage (default: buildspec_test.yml)"
+variable "buildspec_sonar" {
+  description = "The buildspec file to be used for the Sonar Test stage."
 }
 
-variable "test_func_buildspec" {
-  description = "The buildspec to be used for the Func Test stage (default: buildspec_test_func.yml)"
+variable "buildspec_selenium" {
+  description = "The buildspec file to be used for the Func Test stage."
 }
 
-variable "test_perf_buildspec" {
-  description = "The buildspec to be used for the Perf Test stage"
-}
-
-variable "package_buildspec" {
-  description = "The buildspec to be used for the Package stage on EC2 or ECS"
+variable "buildspec_package" {
+  description = "The buildspec file to be used for the Package stage on EC2 or ECS"
 }
 
 variable "project_key" {
   description = "Project Key for Sonar"
+  type        = string
 }
 variable "sonar_url" {
   description = "Sonar URL"
+  type        = string
 }
 
 variable "sonarcloud_token_name" { type = string }
@@ -65,83 +58,74 @@ variable "environments" {
   type        = list(string)
 }
 
-variable "source_provider" {
-  type = string
-}
 variable "connection_provider" {
-  type = string
+  type        = string
   description = "Valid values are Bitbucket, GitHub, or GitHubEnterpriseServer."
 }
 
-variable "template_name" {}
-variable "app_fqdn" {}
-variable "approve_sns_arn" {}
+variable "app_fqdn" {
+  type = list(string)
+}
+variable "approve_sns_arn" {
+  type = string
+}
 
 variable "storage_bucket" {
   description = "Bucket where additional artifacts store(for dlt, deb script)"
   type        = string
 }
-variable "build_artifact_bucket" {}
 variable "aws_kms_key" {}
 variable "aws_kms_key_arn" {}
 variable "region_name" {}
-variable "asg_name" {}
-variable "target_group_name" { type = list(string) }
-variable "target_group_green_name" { type = list(string) }
-variable "target_group_blue_name" { type = list(string) }
-variable "desired_capacity" { type = list(string) }
-variable "conf_all_at_once" {}
-variable "conf_one_at_time" {}
 variable "target_type" {}
-variable "image_repo_name" {}
-variable "main_listener" {}
-variable "termination_wait_time_in_minutes" {
-  default = 0
-}
 variable "codebuild_role" {}
 variable "codepipeline_role" {}
-variable "codedeploy_role" {}
 variable "codeartifact_domain" {
   description = "Use for Java application"
 }
 variable "codeartifact_repo" {
   description = "Use for Java application"
 }
-## For ECS Service usage
-variable "ecs_cluster_name" {}
-variable "ecs_service_name" {
-  type = list(string)
-}
 
-# Variables for DLT test
-variable "dlt_ui_url" {}
+variable "selenium_create" {
+  type = bool
+}
+#=============== Variables for DLT Test ==============
+variable "dlt_create" {
+  type = bool
+}
+variable "buildspec_dlt" {
+  description = "The buildspec to be used for the Performance Test "
+}
+variable "dlt_ui_url" {
+  type = string
+}
 variable "cognito_password_name" {}
 variable "admin_name" {}
 variable "dlt_api_host" {}
 variable "cognito_user_pool_id" {}
 variable "cognito_client_id" {}
 variable "cognito_identity_pool_id" {}
-variable "route53_zone_name" {}
-# Variables for Report Portal
-variable "rp_endpoint" {}
-variable "rp_token_name" {}
-variable "rp_project" {}
+variable "dlt_fqdn" {}
+variable "dlt_test_name" {}
+variable "dlt_test_id" {}
+variable "dlt_test_type" {}
+variable "dlt_task_count" {
+  type = number
+}
+variable "concurrency" {
+  type = number
+}
+variable "ramp_up" {}
+variable "hold_for" {}
 
-#============================ EKS =================================================#
+#============================ EKS ==========================#
+
 variable "buildspec_eks" {}
 variable "cluster_name" {}
-variable "health_path" {}
-variable "target_port" {}
-variable "aws_acm_certificate_arn" {}
 variable "eks_role_arn" {}
-variable "cluster_public_subnet_ids" {
-  type = list(string)
-}
-variable "cluster_security_groups" {
-  type = list(string)
-}
+variable "ecr_repo_name" {}
 variable "cluster_region" {}
-variable "cluster_acm_certificate_arn" {}
 variable "cluster_config" {
   description = "Name of AWS Parameter Store Variable, where K8s Cluster config stored in base64"
 }
@@ -159,7 +143,59 @@ variable "helm_chart" {
 }
 variable "helm_chart_version" {}
 
+#========================= Docker Image Scan ==================#
+variable "tryvi_severity" {
+  type = string
+}
+
 #======================= Unit Tests ===========================#
-variable "unit_buildspec" {
-  default = "buildspec_unit_tests.yml"
+variable "buildspec_unit" {
+  type = string
+}
+#=============== Codedeploy ===================================#
+variable "deployment_group_names" {
+  type = list(string)
+}
+variable "application_name" {
+  type = string
+}
+variable "codedeploy_role_arns" {
+  type = list(string)
+}
+variable "report_portal_environments" {
+  type = list(map(string))
+}
+
+# Regions where application infrastructure for stage is deployed
+variable "stage_regions" {
+  type = list(list(string))
+}
+
+variable "artifact_bucket_prefix" {}
+
+#=============== Carrrier =======================
+variable "carrier_create" {
+  type = bool
+}
+variable "buildspec_carrier" {
+  description = "The name of buildspec file if we use Carrier "
+}
+variable "carrier_url" {
+  type = string
+}
+variable "carrier_project_id" {
+  type = string
+}
+variable "carrier_token_name" {
+  type = string
+}
+variable "carrier_test_id" {
+  type = string
+}
+#========================= Synthetics ======================#
+variable "synthetics_create" {
+  type = bool
+}
+variable "statemachine_arn" {
+  type = string
 }
