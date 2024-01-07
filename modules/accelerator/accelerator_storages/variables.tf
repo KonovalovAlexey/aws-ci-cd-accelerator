@@ -54,8 +54,8 @@ variable "artifact_bucket_prefix" {
   type        = string
 }
 
-variable "storage_bucket_prefix" {
-  description = "The prefix for the storage bucket"
+variable "service_bucket_prefix" {
+  description = "The prefix for the service bucket where we store task definition files for ECS or EC2 script"
   type        = string
 }
 

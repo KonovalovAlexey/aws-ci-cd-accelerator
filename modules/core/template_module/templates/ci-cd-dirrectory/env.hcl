@@ -40,8 +40,6 @@ locals {
   selenium_create       = false
   #================ Create Synthetics Test Stage ====================#
   synthetics_create     = false
-  #======================= AI Check Create ==========================#
-  ai_handler_create     = false
   #================ Parameters for Artifact Bucket ==================#
   force_destroy         = true #  Delete bucket when destroy: true or false
 

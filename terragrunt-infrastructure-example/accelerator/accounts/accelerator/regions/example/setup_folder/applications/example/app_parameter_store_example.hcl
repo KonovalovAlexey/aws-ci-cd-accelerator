@@ -2,9 +2,12 @@
 locals {
   env_vars        = read_terragrunt_config("env.hcl")
   repo_name       = local.env_vars.locals.repo_name
+}
+locals {
+  github_token    = ""
   parameter_store = [
     {
-      parameter_value = "" # Token for Application Repo (GitHub, BitBucket).
+      parameter_value = local.github_token # Token for Application Repo (GitHub, BitBucket).
       parameter_name  = "/${local.repo_name}/user/token"
       tier            = "Standard"
       description     = "Token for Application Repo (GitHub, BitBucket)."

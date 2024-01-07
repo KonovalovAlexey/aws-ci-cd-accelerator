@@ -32,27 +32,6 @@ data "aws_iam_policy_document" "s3_storage" {
 #      variable = "aws:PrincipalArn"
 #    }
   }
-  statement {
-    sid    = "ForRoles"
-    effect = "Allow"
-    principals {
-      identifiers = ["arn:aws:iam::${var.aws_account_id}:root"]
-      type        = "AWS"
-    }
-    actions = [
-      "s3:GetObject"
-    ]
-    resources = [
-      "arn:aws:s3:::${local.storage_bucket}/*"
-    ]
-    condition {
-      test   = "StringLike"
-      values = [
-        "arn:aws:iam::${var.aws_account_id}:role/Codebuild-*"
-      ]
-      variable = "aws:PrincipalArn"
-    }
-  }
 }
 module "s3_storage_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"

@@ -78,6 +78,19 @@ provider "aws" {
     tags = var.default_tags
   }
 }
+%{ for region in local.replica_regions ~}
+provider "aws" {
+  alias  = "${region}"
+  region = "${region}"
+  assume_role {
+    role_arn     = "${local.assume_role_arn}"
+    session_name = "terragrunt"
+  }
+  default_tags {
+    tags = var.default_tags
+  }
+}
+%{ endfor ~}
 provider "aws" {
   alias  = "east"
   region = "us-east-1"
@@ -107,7 +120,7 @@ remote_state {
     bucket         = "${local.common_vars.locals.backend_bucket_prefix}-${local.common_vars.locals.project}-${local.account_id}-${local.account_name}-${local.aws_region}"
     key            = "${path_relative_to_include()}/terraform.tfstate"
     region         = local.aws_region
-    dynamodb_table = "terraform-locks-${local.account_name}-${local.aws_region}"
+    dynamodb_table = "${local.common_vars.locals.backend_bucket_prefix}-${local.common_vars.locals.project}-${local.account_id}-${local.account_name}-${local.aws_region}"
     role_arn       = try(local.assume_role_arn, null)
   }
   generate = {
@@ -131,11 +144,6 @@ inputs = merge(
   local.region_vars.locals,
   local.environment_vars.locals,
   {
-    default_tags           = local.common_vars.locals.default_tags
-    project                = local.common_vars.locals.project
-    backend_bucket         = "${local.common_vars.locals.backend_bucket_prefix}-${local.common_vars.locals.project}-${local.account_id}-${local.account_name}-${local.aws_region}"
-    artifact_bucket_prefix = local.common_vars.locals.artifact_bucket_prefix
-    storage_bucket_prefix  = local.common_vars.locals.storage_bucket_prefix
-    root_directory         = get_parent_terragrunt_dir()
+    root_directory = get_parent_terragrunt_dir()
   }
 )

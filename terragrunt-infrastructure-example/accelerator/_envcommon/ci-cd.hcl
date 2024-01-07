@@ -34,20 +34,35 @@ locals {
   # be used to construct the terraform block in the child terragrunt configurations.
   # base_source_url = "git::git@github.com:gruntwork-io/terragrunt-infrastructure-modules-example.git//mysql"
   base_source_url = "${get_path_to_repo_root()}//modules/accelerator/main-module/"
+
+  env_vars   = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  dlt_create = local.env_vars.locals.dlt_create
 }
 
 dependency "vpc" {
   config_path  = "${get_terragrunt_dir()}/../../../core/vpc"
   mock_outputs = {
     vpc_id                 = "temporary-dummy-id"
-    public_subnets         = ["subnet-1111111"]
-    private_subnets        = ["subnet-2222222"]
-    vpc_nat_security_group = "sg-1111111111"
+    public_subnets         = ["subnet-dummy-1", "subnet-dummy-2", "subnet-dummy-3"]
+    private_subnets        = ["subnet-dummy-1", "subnet-dummy-2", "subnet-dummy-3"]
+    vpc_nat_security_group = "sg-dummy-1"
+    vpc_cidr_block         = "10.0.0.0/16"
   }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
 dependency "dlt" {
-  config_path = "${get_terragrunt_dir()}/../../../core/dlt"
+  config_path  = "${get_terragrunt_dir()}/../../../core/dlt"
+  mock_outputs = {
+    console                  = "temprory-dummy-url"
+    api                      = "temprory-dummy-api"
+    cognito_client_id        = "temprory-dummy-client-id"
+    cognito_identity_pool_id = "temprory-dummy-cognito_identity_pool_id"
+    cognito_user_pool_id     = "temprory-dummy-cognito_user_pool_id"
+    dlt_fqdn                 = "temprory-dummy-dlt_fqdn"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+
+  skip_outputs = local.dlt_create ? false : true
 }
 
 inputs = {
@@ -61,11 +76,10 @@ inputs = {
   public_subnet_ids        = dependency.vpc.outputs.public_subnets
   vpc_range                = dependency.vpc.outputs.vpc_cidr_block
   #============================ DLT ======================================#
-  dlt_ui_url               = dependency.dlt.outputs.console
-  dlt_api_host             = dependency.dlt.outputs.api
-  cognito_client_id        = dependency.dlt.outputs.cognito_client_id
-  cognito_identity_pool_id = dependency.dlt.outputs.cognito_identity_pool_id
-  cognito_user_pool_id     = dependency.dlt.outputs.cognito_user_pool_id
-  dlt_fqdn                 = dependency.dlt.outputs.dlt_fqdn
+  dlt_ui_url               = local.dlt_create ? dependency.dlt.outputs.console : null
+  dlt_api_host             = local.dlt_create ? dependency.dlt.outputs : null
+  cognito_client_id        = local.dlt_create ? dependency.dlt.outputs.cognito_client_id : null
+  cognito_identity_pool_id = local.dlt_create ? dependency.dlt.outputs.cognito_identity_pool_id : null
+  cognito_user_pool_id     = local.dlt_create ? dependency.dlt.outputs.cognito_user_pool_id : null
+  dlt_fqdn                 = local.dlt_create ? dependency.dlt.outputs.dlt_fqdn : null
 }
-

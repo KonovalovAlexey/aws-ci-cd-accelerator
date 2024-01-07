@@ -18,15 +18,9 @@ variable "region" {
   type        = string
 }
 
-variable "region_name" {
-  description = "The name of the AWS region for the deployment"
-  type        = string
-}
-
 variable "accelerator_account_id" {
   description = "The AWS account ID for the accelerator account"
   type        = string
-  default     = ""
 }
 
 #=========================== VPC =========================================
@@ -104,9 +98,8 @@ variable "vpc_id" {
 }
 
 variable "nat_security_group_id" {
-  description = "The ID of the existing NAT security group. Leave empty if using the VPC resource created by the module"
+  description = "The ID of the existing VPC NAT security group. Leave empty if using the VPC resource created by the module"
   type        = string
-  default     = ""
 }
 
 #================================ Route53 ====================================#

@@ -57,19 +57,24 @@ resource "aws_config_configuration_recorder_status" "recorder_status" {
 resource "aws_s3_bucket" "config_recorder" {
   bucket = "config-recorder-${local.account_id}-${var.region}"
   force_destroy = var.force_destroy
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.cloudtrail_kms_key.id
-        sse_algorithm     = "aws:kms"
-      }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "config" {
+  bucket = aws_s3_bucket.config_recorder.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.cloudtrail_kms_key.id
     }
-  }
-  versioning {
-    enabled = var.versioning
   }
 }
 
+resource "aws_s3_bucket_versioning" "config" {
+  bucket = aws_s3_bucket.config_recorder.id
+  versioning_configuration {
+    status = var.versioning
+  }
+}
 resource "aws_s3_bucket_public_access_block" "private" {
   bucket                  = aws_s3_bucket.config_recorder.id
   block_public_acls       = true
@@ -85,9 +90,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "config" {
     id     = "log"
     status = "Enabled"
 
-#    expiration {
-#      days = 90
-#    }
+    expiration {
+      days = 90
+    }
     transition {
       days          = 30
       storage_class = "STANDARD_IA"

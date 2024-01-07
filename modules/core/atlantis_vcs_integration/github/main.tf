@@ -1,11 +1,13 @@
 provider "github" {
   base_url = var.github_base_url
   token    = var.atlantis_github_user_token
-  owner    = var.organization_name
+  owner    = var.github_owner
 }
 
-resource "github_repository_webhook" "atlantis" {
-  repository = var.infra_repo_name
+resource "github_repository_webhook" "this" {
+  count = length(var.repo_names)
+
+  repository = var.repo_names[count.index]
 
   configuration {
     url          = var.atlantis_url_events
@@ -14,7 +16,10 @@ resource "github_repository_webhook" "atlantis" {
     secret       = var.atlantis_webhook_secret
   }
 
-  active = true
-
-  events = ["pull_request", "push", "pull_request_review", "issue_comment"]
+  events = [
+    "issue_comment",
+    "pull_request",
+    "pull_request_review",
+    "pull_request_review_comment",
+  ]
 }

@@ -14,9 +14,9 @@ locals {
   #************************* For Github ***************************#
   github_user                = "" # GitHub technical user
   atlantis_github_user_token = "" # GitHub technical user token
-  organization_name          = "" # GitHub organization name
-  infra_repo_name            = ""
-  vcs                        = "github"
+  github_owner               = ""
+  repo_names                 = [] # GitHub repos to connect to Atlantis
+  vcs                        = "github" # Don't change, the name of folder to deploy Git-Atlantis integration
   #************************* For GitLab ***************************#
 #  gitlab_user                = "" # GitLab technical user
 #  atlantis_gitlab_user_token = "" # GitLab technical user token

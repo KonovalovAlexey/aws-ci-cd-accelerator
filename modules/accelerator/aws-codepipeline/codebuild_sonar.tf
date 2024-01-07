@@ -50,10 +50,6 @@ resource "aws_codebuild_project" "test_project" {
       value = var.organization_name
     }
     environment_variable {
-      name  = "BUCKET"
-      value = var.storage_bucket
-    }
-    environment_variable {
       name  = "SONAR_TOKEN_NAME"
       value = var.sonarcloud_token_name
     }

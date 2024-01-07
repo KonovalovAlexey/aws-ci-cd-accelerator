@@ -22,7 +22,7 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_policy" "ssm_parameter_policy" {
-  name        = "SSMParameterReadPolicy"
+  name        = "SSMParameterReadPolicy-${var.region_name}"
   description = "Policy for reading parameters from SSM Parameter Store"
 
   policy = jsonencode({

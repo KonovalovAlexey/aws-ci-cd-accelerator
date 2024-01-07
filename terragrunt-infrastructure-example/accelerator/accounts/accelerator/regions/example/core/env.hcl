@@ -10,9 +10,11 @@ locals {
   nat_prefix_list_ids      = [] # Prefix List IDs for access to NAT.
   atlantis_prefix_list_ids = [] # Prefix List IDs for access to Atlantis
   #======================= Atlantis ========================#
-  allowed_cidr_blocks      = [local.cidr] # to avoid creating Atlantis SG Ingress Rule with 0.0.0.0/0
-  atlantis_name            = "atlantis"
-  repo_whitelist           = []
+  atlantis_prefix_list_ids = [] # Prefix List IDs for access to Atlantis from Git
+  allowed_cidr_blocks      = [] #
+  allowed_prefix_list_ids  = []
+  atlantis_name            = ""
+  atlantis_repo_allowlist  = [] # List of repo names to connect to Atlantis
   route53_zone_name        = "" # Route53 zone name for the project.
   #========================= DLT ===========================#
   dlt_create               = true

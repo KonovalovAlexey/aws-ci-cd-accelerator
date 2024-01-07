@@ -33,7 +33,7 @@ At the moment `Bitbucket`, `CodeCommit`, `GitHub` and `GitLab` can be used as co
 3.  `Unit Test` - unit testing
 4.  `Build` (`Package`/`Docker-Image`)
     - **For deployment on EC2**: We support `Java`, `Golang`, or `Python` languages to pack an application code into `deb package`, and upload it into artifact storage `S3` bucket (`packaged/` prefix). It is configured [buildspec.yml](./template_config_files/buildspec.yml). A custom [script](../modules/accelerator/accelerator_storages/storage_bucket_files/pack_to_deb.sh) that is uploaded to the `S3` bucket.
-    -  and in [docker_buildspec.yml](./template_config_files/docker_buildspec.yml) for ECS deployment in the application repo. Part of the CI pipeline works according to the following algorithm: The application code is piped to the artifact repository, checked for quality with `SonarCloud`, and packaged for the next installation in a Debian package or in a container. Each time the Build stage is completed successfully, the first stage of the CD pipeline starts. The CD pipeline consists of three logical blocks, described in the respective sections below.
+    -  **For deployment with docker** we use [buildspec_docker.yml](./template_config_files/buildspec_docker.yml)  in the application repo.
 
 ## Continuous Delivery
 ### DEV stage

@@ -1,4 +1,3 @@
-
 data "aws_iam_policy_document" "codepipeline_assume_policy" {
   statement {
     effect  = "Allow"
@@ -19,7 +18,7 @@ resource "aws_iam_role" "codepipeline_role" {
 # CodePipeline policy needed to use CodeCommit and CodeBuild
 data "template_file" "codepipeline_policy_template" {
   template = file("${path.module}/iam-policies/codepipeline.tpl")
-  vars = {
+  vars     = {
     REGION    = var.region
     ACCOUNT   = var.aws_account_id
     REPO_NAME = var.repo_name
@@ -50,7 +49,7 @@ data "aws_iam_policy_document" "codebuild_assume_policy" {
 }
 
 resource "aws_iam_role" "codebuild_role" {
-  name_prefix        = "Codebuild-${var.repo_name}-${var.region_name}-"
+  name               = "Codebuild-${var.repo_name}-${var.region_name}"
   assume_role_policy = data.aws_iam_policy_document.codebuild_assume_policy.json
 }
 
@@ -101,8 +100,8 @@ resource "aws_iam_role_policy_attachment" "policy-attach-vpc" {
 
 data "template_file" "codebuild_policy_template" {
   template = file("${path.module}/iam-policies/codebuild.tpl")
-  vars = {
-    StorageBucket = var.storage_bucket_arn
+  vars     = {
+    StorageBucket = var.service_bucket_arn
     REGION        = var.region
     ACCOUNT       = var.aws_account_id
     PROJECT       = var.project
@@ -126,9 +125,9 @@ resource "aws_iam_role_policy_attachment" "dlt" {
 }
 
 resource "aws_iam_policy" "s3_artifact_policy" {
-  name        = "S3BucketAccessPolicy"
+  name        = "S3BucketAccessPolicy-${var.repo_name}-${var.region_name}"
   description = "Policy to grant access to several S3 buckets with region-specific names"
-  policy = jsonencode({
+  policy      = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
       {

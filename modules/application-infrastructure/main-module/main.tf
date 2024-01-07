@@ -39,7 +39,6 @@ module "alb" {
   egress_cidr_blocks      = var.egress_cidr_blocks
   dns_record_names        = var.dns_record_names
   region                  = var.region
-  region_name             = var.region_name
   nat_security_group_id   = var.vpc_create ? module.vpc[0].vpc_nat_security_group : var.nat_security_group_id
 }
 
@@ -49,7 +48,7 @@ module "asg" {
   repo_name              = var.repo_name
   elb_target_group_arn   = module.alb.target_group_arn
   lb_id                  = module.alb.alb_id
-  asg_security_groups    = compact(concat([module.alb.security_group_self_port], var.additional_security_groups))
+  asg_security_groups    = compact(concat([module.alb.security_group_self_port, try(module.vpc[0].vpc_nat_security_group, var.nat_security_group_id)], var.additional_security_groups))
   private_subnet_ids     = var.vpc_create ? module.vpc[0].private_subnets : var.private_subnet_ids
   instance_type          = var.instance_type
   desired_capacity       = var.desired_capacity
@@ -68,7 +67,7 @@ module "ecs" {
   region                 = var.region
   repo_name              = var.repo_name
   vpc_id                 = var.vpc_create ? module.vpc[0].vpc_id : var.vpc_id
-  ecs_security_groups    = compact(concat([module.alb.security_group_self_port], var.additional_security_groups))
+  ecs_security_groups    = compact(concat([module.alb.security_group_self_port, try(module.vpc[0].vpc_nat_security_group, var.nat_security_group_id)], var.additional_security_groups))
   private_subnet_ids     = var.vpc_create ? module.vpc[0].private_subnets : var.private_subnet_ids
   container_name         = var.container_name
   cpu                    = var.cpu

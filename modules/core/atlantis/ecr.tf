@@ -14,7 +14,7 @@ data "aws_iam_policy_document" "aws_ecr_repository_policy" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = [module.atlantis.task_role_arn]
+      identifiers = ["*"]
     }
     actions = [
       "ecr:GetDownloadUrlForLayer",

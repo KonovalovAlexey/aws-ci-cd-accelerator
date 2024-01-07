@@ -2,8 +2,8 @@
 # These modules create a CodePipeline with CodeBuilds and instruments for application testing .
 # -------------------------------------------------------------------------------------------
 locals {
-  storage_bucket     = "${var.storage_bucket_prefix}-${var.project}-${var.region}"
-  storage_bucket_arn = "arn:aws:s3:::${local.storage_bucket}"
+  service_bucket     = "${var.service_bucket_prefix}-${var.project}-${var.region}"
+  service_bucket_arn = "arn:aws:s3:::${local.service_bucket}"
 }
 module "buckets" {
 
@@ -20,7 +20,7 @@ module "buckets" {
   kms_identifiers             = var.kms_identifiers
   artifact_bucket_identifiers = var.artifact_bucket_identifiers
   artifact_bucket_prefix      = var.artifact_bucket_prefix
-  storage_bucket_prefix       = var.storage_bucket_prefix
+  service_bucket_prefix       = var.service_bucket_prefix
   application_port            = var.application_port
   container_name              = var.container_name
   cpu                         = var.cpu
@@ -38,7 +38,7 @@ module "aws_policies" {
   private_subnet_ids     = var.private_subnet_ids
   project                = var.project
   repo_name              = var.repo_name
-  storage_bucket_arn     = local.storage_bucket_arn
+  service_bucket_arn     = local.service_bucket_arn
   eks_role_arn           = var.eks_role_arn
   target_type            = var.target_type
   codedeploy_role_arns   = var.codedeploy_role_arns
@@ -74,7 +74,7 @@ module "pipeline" {
   sonarcloud_token_name      = var.sonarcloud_token_name
   private_subnet_ids         = var.private_subnet_ids
   approve_sns_arn            = module.sns.approve_sns_arn
-  storage_bucket             = local.storage_bucket
+  service_bucket             = local.service_bucket
   target_type                = var.target_type
   buildspec_package          = var.target_type == "instance" ? var.buildspec_package : var.buildspec_docker
   aws_kms_key                = module.buckets.aws_kms_key
@@ -147,7 +147,6 @@ module "pipeline" {
 
 module "sns" {
   source             = "../notifications"
-  codepipeline_arn   = module.pipeline.codepipeline_arn
   repo_name          = var.repo_name
   build_success      = var.build_success
   display_name       = var.display_name
@@ -167,11 +166,9 @@ module "pr" {
   build_timeout              = "20"
   service_role               = module.aws_policies.codebuild_role_arn
   connection_provider        = var.connection_provider
-  region                     = var.region
   organization_name          = var.organization_name
   project_key                = var.project_key
   sonarcloud_token_name      = var.sonarcloud_token_name
-  region_name                = var.region_name
   aws_kms_key_arn            = module.buckets.aws_kms_key_arn
   build_compute_type         = var.build_compute_type
   build_image                = var.build_image

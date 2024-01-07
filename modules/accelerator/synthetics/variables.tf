@@ -12,4 +12,6 @@ variable "security_groups" {
   description = "A list of security group IDs to be used in the deployment"
   type        = list(string)
 }
-variable "aws_kms_key_arn" {}
+variable "aws_kms_key_arn" {
+  type = string
+}

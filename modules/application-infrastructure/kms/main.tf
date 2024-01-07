@@ -1,7 +1,7 @@
 #======================== KMS =========================
 module "kms" {
   source                  = "terraform-aws-modules/kms/aws"
-  version                 = "1.5.0"
+  version                 = "2.1.0"
   description             = "KMS Key for ${var.repo_name} ECS log group"
   deletion_window_in_days = 7
   enable_key_rotation     = true

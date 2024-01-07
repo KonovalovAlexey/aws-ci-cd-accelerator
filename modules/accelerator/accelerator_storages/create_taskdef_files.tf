@@ -41,7 +41,7 @@ resource "aws_s3_object" "taskdef" {
     for pair in local.stage_env_region_pairs : "${pair.environment}-${pair.region}" => pair if var.target_type == "ip"
   }
 
-  bucket                 = local.storage_bucket
+  bucket                 = module.s3_bucket_service[0].s3_bucket_id
   key                    = "${var.repo_name}/taskdef_${each.value.environment}-${each.value.region}.json"
   content                = data.template_file.taskdef[each.key].rendered
   kms_key_id             = module.kms.key_arn

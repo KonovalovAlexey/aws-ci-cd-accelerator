@@ -9,14 +9,14 @@ variable "atlantis_github_user_token" {
   type        = string
 }
 
-variable "organization_name" {
-  description = "GitHub organization name to use when creating a webhook"
+variable "github_owner" {
+  description = "GitHub owner name to use when creating a webhook"
   type        = string
 }
 
-variable "infra_repo_name" {
-  description = "The name of the infrastructure repository on GitHub"
-  type        = string
+variable "repo_names" {
+  description = "The name of the infrastructure repositories on GitHub"
+  type        = list(string)
 }
 
 variable "atlantis_webhook_secret" {

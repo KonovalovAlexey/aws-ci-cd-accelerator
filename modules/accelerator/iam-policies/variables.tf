@@ -23,7 +23,7 @@ variable "target_type" {
 variable "eks_role_arn" {
   type = string
 }
-variable "storage_bucket_arn" {
+variable "service_bucket_arn" {
   type = string
 }
 

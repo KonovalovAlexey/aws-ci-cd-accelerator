@@ -42,7 +42,7 @@ data "aws_iam_policy_document" "ecr_policy" {
     condition {
       test     = "StringLike"
       values   = [
-        "arn:aws:iam::*:role/Ecs-Execution-${var.repo_name}",
+        "arn:aws:iam::*:role/Ecs-Execution-${var.repo_name}*",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Codebuild-${var.repo_name}*"]
       variable = "aws:PrincipalArn"
     }

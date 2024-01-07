@@ -70,21 +70,33 @@ variable "approve_sns_arn" {
   type = string
 }
 
-variable "storage_bucket" {
-  description = "Bucket where additional artifacts store(for dlt, deb script)"
+variable "service_bucket" {
+  description = "Bucket where additional files store(for ECS task definitions, deb script)"
   type        = string
 }
-variable "aws_kms_key" {}
-variable "aws_kms_key_arn" {}
-variable "region_name" {}
-variable "target_type" {}
-variable "codebuild_role" {}
-variable "codepipeline_role" {}
+variable "aws_kms_key" {
+  type = string
+}
+variable "aws_kms_key_arn" {
+  type = string
+}
+variable "region_name" {
+  type = string
+}
+variable "target_type" { type = string }
+variable "codebuild_role" {
+  type = string
+}
+variable "codepipeline_role" {
+  type = string
+}
 variable "codeartifact_domain" {
   description = "Use for Java application"
+  type        = string
 }
 variable "codeartifact_repo" {
   description = "Use for Java application"
+  type        = string
 }
 
 variable "selenium_create" {
@@ -96,52 +108,94 @@ variable "dlt_create" {
 }
 variable "buildspec_dlt" {
   description = "The buildspec to be used for the Performance Test "
+  type        = string
 }
 variable "dlt_ui_url" {
   type = string
 }
-variable "cognito_password_name" {}
-variable "admin_name" {}
-variable "dlt_api_host" {}
-variable "cognito_user_pool_id" {}
-variable "cognito_client_id" {}
-variable "cognito_identity_pool_id" {}
-variable "dlt_fqdn" {}
-variable "dlt_test_name" {}
-variable "dlt_test_id" {}
-variable "dlt_test_type" {}
+variable "cognito_password_name" {
+  type = string
+}
+variable "admin_name" {
+  type = string
+}
+variable "dlt_api_host" {
+  type = string
+}
+variable "cognito_user_pool_id" {
+  type = string
+}
+variable "cognito_client_id" {
+  type = string
+}
+variable "cognito_identity_pool_id" {
+  type = string
+}
+variable "dlt_fqdn" {
+  type = string
+}
+variable "dlt_test_name" {
+  type = string
+}
+variable "dlt_test_id" {
+  type = string
+}
+variable "dlt_test_type" {
+  type = string
+}
 variable "dlt_task_count" {
   type = number
 }
 variable "concurrency" {
   type = number
 }
-variable "ramp_up" {}
-variable "hold_for" {}
+variable "ramp_up" {
+  type = string
+}
+variable "hold_for" {
+  type = string
+}
 
 #============================ EKS ==========================#
 
-variable "buildspec_eks" {}
-variable "cluster_name" {}
-variable "eks_role_arn" {}
-variable "ecr_repo_name" {}
-variable "cluster_region" {}
+variable "buildspec_eks" {
+  type = string
+}
+variable "cluster_name" {
+  type = string
+}
+variable "eks_role_arn" {
+  type = string
+}
+variable "ecr_repo_name" {
+  type = string
+}
+variable "cluster_region" {
+  type = string
+}
 variable "cluster_config" {
   description = "Name of AWS Parameter Store Variable, where K8s Cluster config stored in base64"
+  type        = string
 }
 variable "docker_user" {
   description = "User for Docker Registry to get Image from"
+  type        = string
 }
 variable "docker_password" {
   description = "AWS Parameter Store variable Name to get password for Docker Registry"
+  type        = string
 }
 variable "docker_repo" {
   description = "Name for Docker Registry REPO/NAME"
+  type        = string
 }
 variable "helm_chart" {
   description = "Helm Chart URL with release"
+  type        = string
 }
-variable "helm_chart_version" {}
+variable "helm_chart_version" {
+  type = string
+}
 
 #========================= Docker Image Scan ==================#
 variable "tryvi_severity" {
@@ -171,7 +225,9 @@ variable "stage_regions" {
   type = list(list(string))
 }
 
-variable "artifact_bucket_prefix" {}
+variable "artifact_bucket_prefix" {
+  type = string
+}
 
 #=============== Carrrier =======================
 variable "carrier_create" {
@@ -179,6 +235,7 @@ variable "carrier_create" {
 }
 variable "buildspec_carrier" {
   description = "The name of buildspec file if we use Carrier "
+  type        = string
 }
 variable "carrier_url" {
   type = string

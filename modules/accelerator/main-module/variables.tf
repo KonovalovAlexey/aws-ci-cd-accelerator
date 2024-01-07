@@ -280,13 +280,6 @@ variable "buildspec_unit" {
   default     = "buildspec_unit_tests.yml"
 }
 
-#================= Versioning =======================
-variable "buildspec_version" {
-  description = "The buildspec file to be used for Versioning stage"
-  type        = string
-  default     = "buildspec_version.yml"
-}
-
 #=============== For CodeDeploy =====================#
 variable "application_name" {
   description = "AWS CodeDeploy Application Name"
@@ -363,11 +356,13 @@ variable "stages" {
 variable "artifact_bucket_prefix" {
   description = "Prefix for the artifact bucket"
   type        = string
+  default     = "artifact-bucket-for"
 }
 
-variable "storage_bucket_prefix" {
+variable "service_bucket_prefix" {
   description = "Prefix for the storage bucket"
   type        = string
+  default     = "service-bucket-for"
 }
 
 #======================= Carrier ==============================

@@ -122,16 +122,16 @@ resource "aws_codebuild_source_credential" "access_token_github" {
   count       = var.connection_provider == "GitHub" ? 1 : 0
   auth_type   = "PERSONAL_ACCESS_TOKEN"
   server_type = "GITHUB"
-  token       = data.aws_ssm_parameter.vcs_token.value
+  token       = var.github_token
 }
 
-resource "aws_codebuild_source_credential" "access_token_bitbucket" {
-  count       = var.connection_provider == "Bitbucket" ? 1 : 0
-  auth_type   = "BASIC_AUTH"
-  server_type = "BITBUCKET"
-  token       = data.aws_ssm_parameter.vcs_token.value
-  user_name   = var.bitbucket_user
-}
+#resource "aws_codebuild_source_credential" "access_token_bitbucket" {
+#  count       = var.connection_provider == "Bitbucket" ? 1 : 0
+#  auth_type   = "BASIC_AUTH"
+#  server_type = "BITBUCKET"
+#  token       = var.bitbucket_token
+#  user_name   = var.bitbucket_user
+#}
 
 resource "aws_codebuild_webhook" "webhook" {
   project_name = aws_codebuild_project.ai-handler.name

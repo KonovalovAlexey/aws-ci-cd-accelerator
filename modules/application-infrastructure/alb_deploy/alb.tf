@@ -5,12 +5,12 @@ resource "aws_lb" "app" {
   drop_invalid_header_fields       = true
   enable_cross_zone_load_balancing = true
   subnets                          = var.public_subnet_ids
-  security_groups                  = [
+  security_groups = [
     module.security_group_http.security_group_id, module.security_group_https.security_group_id,
     module.security_group_self_port.security_group_id, var.nat_security_group_id
   ]
   enable_http2 = true
-  tags         = {
+  tags = {
     Application = var.repo_name
     Project     = var.project
   }
@@ -37,7 +37,7 @@ resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.app.arn
   port              = "443"
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
   certificate_arn   = var.aws_acm_certificate_arn
   default_action {
     type = "fixed-response"
@@ -86,7 +86,7 @@ resource "aws_lb_listener_rule" "ec2_rule" {
     }
   }
   lifecycle {
-    ignore_changes = [action.0.target_group_arn]
+    ignore_changes = [action[0].target_group_arn]
   }
 }
 
@@ -151,6 +151,6 @@ resource "aws_lb_listener_rule" "ecs_rule" {
     }
   }
   lifecycle {
-    ignore_changes = [action.0.target_group_arn]
+    ignore_changes = [action[0].target_group_arn]
   }
 }

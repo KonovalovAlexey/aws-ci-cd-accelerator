@@ -33,11 +33,6 @@ variable "region" {
   type        = string
 }
 
-variable "region_name" {
-  description = "The name of the AWS region to deploy resources"
-  type        = string
-}
-
 variable "health_path" {
   description = "The health check PATH for the application"
   type        = string

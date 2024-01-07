@@ -44,7 +44,7 @@ resource "aws_codebuild_project" "build_project" {
     }
     environment_variable {
       name  = "BUCKET"
-      value = var.storage_bucket
+      value = var.service_bucket
     }
     environment_variable {
       name  = "DOMAIN"

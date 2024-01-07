@@ -25,6 +25,8 @@ locals {
   dns_record_names        = [] # DNS Records for each stage
   allowed_cidr_blocks     = [] # Cidr Blocks to be allowed access to Application through LoadBalancer
   allowed_prefix_list_ids = [] # Prefis List IDs to be allowed access to Application through LoadBalancer
+  accelerator_account_id  = ""
+  accelerator_region      = ""
   # ==================== CodeDeploy Block =======================
   codedeploy_role_create  = true # If we deploy the same infrastructure in a second region, set false
 }

@@ -11,7 +11,7 @@
 terraform {
   #  source = "${local.base_source_url}?ref=v0.7.0"
   source = "${local.base_source_url}"
-  before_hook "validate_tflint" {
+  after_hook "validate_tflint" {
     commands = ["validate"]
     execute  = [
       "sh", "-c", <<EOT

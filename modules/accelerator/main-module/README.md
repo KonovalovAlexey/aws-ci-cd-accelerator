@@ -1,14 +1,9 @@
-# Completed Main Module
-
-Configuration in this directory combine all modules for CI/CD:
-
-
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | \>= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | \>= 5.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
 
 ## Providers
 
@@ -36,13 +31,12 @@ No resources.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_account_identifiers"></a> [account\_identifiers](#input\_account\_identifiers) | Identifiers for the AWS account | `list(string)` | n/a | yes |
-| <a name="input_account_name"></a> [account\_name](#input\_account\_name) | Name of the AWS account to deploy into | `string` | n/a | yes |
 | <a name="input_admin_name"></a> [admin\_name](#input\_admin\_name) | User Name for access to DLT WEB UI | `string` | `"user"` | no |
 | <a name="input_app_fqdn"></a> [app\_fqdn](#input\_app\_fqdn) | List of Fully Qualified Domain Names (FQDN) for the application | `list(string)` | `[]` | no |
 | <a name="input_application_name"></a> [application\_name](#input\_application\_name) | AWS CodeDeploy Application Name | `string` | `""` | no |
 | <a name="input_application_port"></a> [application\_port](#input\_application\_port) | Port where a load balancer redirects traffic | `string` | `"8080"` | no |
 | <a name="input_artifact_bucket_identifiers"></a> [artifact\_bucket\_identifiers](#input\_artifact\_bucket\_identifiers) | Identifiers for the artifact bucket | `list(string)` | n/a | yes |
-| <a name="input_artifact_bucket_prefix"></a> [artifact\_bucket\_prefix](#input\_artifact\_bucket\_prefix) | Prefix for the artifact bucket | `string` | n/a | yes |
+| <a name="input_artifact_bucket_prefix"></a> [artifact\_bucket\_prefix](#input\_artifact\_bucket\_prefix) | Prefix for the artifact bucket | `string` | `"artifact-bucket-for"` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS account ID | `string` | n/a | yes |
 | <a name="input_bitbucket_user"></a> [bitbucket\_user](#input\_bitbucket\_user) | Username for Bitbucket integration | `string` | `""` | no |
 | <a name="input_build_compute_type"></a> [build\_compute\_type](#input\_build\_compute\_type) | The build instance type for CodeBuild (default: BUILD\_GENERAL1\_SMALL) | `string` | `"BUILD_GENERAL1_MEDIUM"` | no |
@@ -57,7 +51,6 @@ No resources.
 | <a name="input_buildspec_selenium"></a> [buildspec\_selenium](#input\_buildspec\_selenium) | The buildspec file to be used for the Func Test stage. | `string` | `"buildspec_selenium.yml"` | no |
 | <a name="input_buildspec_sonar"></a> [buildspec\_sonar](#input\_buildspec\_sonar) | The buildspec file to be used for the Test stage. | `string` | `"buildspec_sonar.yml"` | no |
 | <a name="input_buildspec_unit"></a> [buildspec\_unit](#input\_buildspec\_unit) | The buildspec file to be used for Unit Tests stage | `string` | `"buildspec_unit_tests.yml"` | no |
-| <a name="input_buildspec_version"></a> [buildspec\_version](#input\_buildspec\_version) | The buildspec file to be used for Versioning stage | `string` | `"buildspec_version.yml"` | no |
 | <a name="input_carrier_create"></a> [carrier\_create](#input\_carrier\_create) | Flag to specify whether to create Carrier resources | `bool` | `false` | no |
 | <a name="input_carrier_project_id"></a> [carrier\_project\_id](#input\_carrier\_project\_id) | The Carrier project ID | `string` | `""` | no |
 | <a name="input_carrier_test_id"></a> [carrier\_test\_id](#input\_carrier\_test\_id) | The Carrier test ID | `string` | `""` | no |
@@ -88,24 +81,23 @@ No resources.
 | <a name="input_docker_password"></a> [docker\_password](#input\_docker\_password) | AWS Parameter Store variable Name to get password for Docker Registry | `string` | `""` | no |
 | <a name="input_docker_repo"></a> [docker\_repo](#input\_docker\_repo) | Name for Docker Registry REPO/NAME | `string` | `""` | no |
 | <a name="input_docker_user"></a> [docker\_user](#input\_docker\_user) | AWS Parameter Store variable of User to get Image from Docker Registry | `string` | `""` | no |
-| <a name="input_ecr_identifiers"></a> [ecr\_identifiers](#input\_ecr\_identifiers) | Identifiers for ECR policy. | `list(string)` | `[]` | no |
 | <a name="input_eks_cluster_name"></a> [eks\_cluster\_name](#input\_eks\_cluster\_name) | Name of the EKS cluster | `string` | n/a | yes |
 | <a name="input_eks_role_arn"></a> [eks\_role\_arn](#input\_eks\_role\_arn) | ARN of the role used for EKS resources | `string` | `""` | no |
 | <a name="input_email_addresses"></a> [email\_addresses](#input\_email\_addresses) | List of email addresses to receive AWS CodePipeline notifications | `list(string)` | `[]` | no |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Map containing environment variables per environment | `map(list(map(string)))` | <pre>{<br>  "dev": [],<br>  "qa": [],<br>  "uat": []<br>}</pre> | no |
 | <a name="input_environments"></a> [environments](#input\_environments) | List of environment names | `list(string)` | n/a | yes |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Delete bucket when destroy: true or false | `bool` | n/a | yes |
+| <a name="input_github_token_name"></a> [github\_token\_name](#input\_github\_token\_name) | Parameter Store Variable Name for GitHub | `string` | n/a | yes |
 | <a name="input_helm_chart"></a> [helm\_chart](#input\_helm\_chart) | Helm Chart URL with release | `string` | `""` | no |
 | <a name="input_helm_chart_version"></a> [helm\_chart\_version](#input\_helm\_chart\_version) | Version of the Helm chart to use | `string` | `""` | no |
 | <a name="input_hold_for"></a> [hold\_for](#input\_hold\_for) | Time to hold target concurrency. | `string` | `"1m"` | no |
 | <a name="input_image_tag_mutability"></a> [image\_tag\_mutability](#input\_image\_tag\_mutability) | Mutability of docker image tag of application | `string` | `"IMMUTABLE"` | no |
 | <a name="input_key_service_users"></a> [key\_service\_users](#input\_key\_service\_users) | A list of IAM ARNs for [key service users](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html#key-policy-service-integration) | `list(string)` | `[]` | no |
-| <a name="input_key_users"></a> [key\_users](#input\_key\_users) | A list of IAM ARNs for [key users](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html#key-policy-default-allow-users) | `list(string)` | `[]` | no |
 | <a name="input_kms_identifiers"></a> [kms\_identifiers](#input\_kms\_identifiers) | Identifiers for KMS policy. | `list(string)` | `[]` | no |
 | <a name="input_llm_model"></a> [llm\_model](#input\_llm\_model) | LLM Model for AI | `string` | n/a | yes |
 | <a name="input_memory"></a> [memory](#input\_memory) | Memory size for container, min=512 | `number` | n/a | yes |
 | <a name="input_openai_api_endpoint"></a> [openai\_api\_endpoint](#input\_openai\_api\_endpoint) | Open AI Endpoint | `string` | n/a | yes |
-| <a name="input_openai_api_key_name"></a> [openai\_api\_key\_name](#input\_openai\_api\_key\_name) | Parameter Store Variable Name for OPEN AI API KEY | `string` | n/a | yes |
+| <a name="input_openai_token_name"></a> [openai\_token\_name](#input\_openai\_token\_name) | Parameter Store Variable Name for OPEN AI API KEY | `string` | n/a | yes |
 | <a name="input_organization_name"></a> [organization\_name](#input\_organization\_name) | Name of a Sonar Organization | `string` | n/a | yes |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | List of private subnet IDs to use for the deployment | `list(string)` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | Name of the project for tags and resource naming | `string` | n/a | yes |
@@ -116,17 +108,14 @@ No resources.
 | <a name="input_repo_default_branch"></a> [repo\_default\_branch](#input\_repo\_default\_branch) | Default branch name for the repository | `string` | n/a | yes |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of an application repository | `string` | n/a | yes |
 | <a name="input_report_portal_environments"></a> [report\_portal\_environments](#input\_report\_portal\_environments) | List of Report Portal environments to deploy | `list(map(string))` | n/a | yes |
-| <a name="input_rp_endpoint"></a> [rp\_endpoint](#input\_rp\_endpoint) | The endpoint for Report Portal | `string` | n/a | yes |
-| <a name="input_rp_project"></a> [rp\_project](#input\_rp\_project) | The project name in Report Portal | `string` | n/a | yes |
-| <a name="input_rp_token_name"></a> [rp\_token\_name](#input\_rp\_token\_name) | The name of the Parameter Store variable for Report Portal token | `string` | n/a | yes |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | Map containing secret variables per environment | `map(list(map(string)))` | <pre>{<br>  "dev": [],<br>  "qa": [],<br>  "uat": []<br>}</pre> | no |
 | <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | List of security group IDs to associate with resources for testing | `list(string)` | `[]` | no |
 | <a name="input_selenium_create"></a> [selenium\_create](#input\_selenium\_create) | Flag to specify whether to create Selenium resources | `bool` | `false` | no |
+| <a name="input_service_bucket_prefix"></a> [service\_bucket\_prefix](#input\_service\_bucket\_prefix) | Prefix for the storage bucket | `string` | `"service-bucket-for"` | no |
 | <a name="input_sonar_url"></a> [sonar\_url](#input\_sonar\_url) | URL for SonarQube or SonarCloud instance | `string` | n/a | yes |
 | <a name="input_sonarcloud_token_name"></a> [sonarcloud\_token\_name](#input\_sonarcloud\_token\_name) | Name of the Parameter Store variable for SonarCloud token | `string` | n/a | yes |
 | <a name="input_stage_regions"></a> [stage\_regions](#input\_stage\_regions) | List of lists containing stage regions | `list(list(string))` | n/a | yes |
 | <a name="input_stages"></a> [stages](#input\_stages) | Map of stage settings | <pre>map(object({<br>    account      = string<br>    regions      = list(string)<br>    region_names = list(string)<br>  }))</pre> | n/a | yes |
-| <a name="input_storage_bucket_prefix"></a> [storage\_bucket\_prefix](#input\_storage\_bucket\_prefix) | Prefix for the storage bucket | `string` | n/a | yes |
 | <a name="input_synthetics_create"></a> [synthetics\_create](#input\_synthetics\_create) | Flag to specify whether to create Synthetics resources | `bool` | `false` | no |
 | <a name="input_target_type"></a> [target\_type](#input\_target\_type) | Target type: <instance> for EC2 or <ip> for ECS | `string` | n/a | yes |
 | <a name="input_tryvi_severity"></a> [tryvi\_severity](#input\_tryvi\_severity) | Trivy Scan Severity | `string` | `""` | no |
@@ -137,5 +126,4 @@ No resources.
 | Name | Description |
 |------|-------------|
 | <a name="output_artifact_bucket_arn"></a> [artifact\_bucket\_arn](#output\_artifact\_bucket\_arn) | The Amazon Resource Name (ARN) of the artifact S3 bucket |
-| <a name="output_aws_kms_key_arn"></a> [aws\_kms\_key\_arn](#output\_aws\_kms\_key\_arn) | The Amazon Resource Name (ARN) of the AWS KMS key |
 | <a name="output_ecr_repo_name"></a> [ecr\_repo\_name](#output\_ecr\_repo\_name) | The name of the Amazon Elastic Container Registry (ECR) repository |

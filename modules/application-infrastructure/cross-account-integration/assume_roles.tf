@@ -15,7 +15,7 @@ data "aws_iam_policy_document" "atlantis" {
     }
     condition {
       test     = "StringLike"
-      values   = ["arn:aws:iam::${var.accelerator_account_id}:role/atlantis*ecs_task_execution"]
+      values   = ["arn:aws:iam::${var.accelerator_account_id}:role/atlantis*ecs-task-role"]
       variable = "aws:PrincipalArn"
     }
   }

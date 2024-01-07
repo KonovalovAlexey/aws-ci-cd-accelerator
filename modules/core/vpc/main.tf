@@ -42,7 +42,7 @@ module "security_group" {
   use_name_prefix         = false
   description             = "VPC security group for HTTP and HTTPS access from NAT"
   vpc_id                  = module.vpc.vpc_id
-  ingress_cidr_blocks     = var.nat_prefix_list_ids == [] ? formatlist("%s/32", module.vpc.nat_public_ips) : []
+  ingress_cidr_blocks     = length(var.nat_prefix_list_ids) == 0 ? formatlist("%s/32", module.vpc.nat_public_ips) : []
   ingress_prefix_list_ids = var.nat_prefix_list_ids
   ingress_with_cidr_blocks = [
     {
@@ -59,11 +59,11 @@ module "security_group" {
   egress_cidr_blocks = var.egress_cidr_blocks
   egress_rules       = ["all-all"]
 
-  ingress_with_self = [
-    {
-      rule = "all-all"
-    }
-  ]
+  #  ingress_with_self = [
+  #    {
+  #      rule = "all-all"
+  #    }
+  #  ]
   tags = {
     Name = "VPC-NAT-${var.project}-SG"
   }

@@ -24,7 +24,7 @@ include "root" {
 # Include the envcommon configuration for the component. The envcommon configuration contains settings that are common
 # for the component across all environments.
 include "envcommon" {
-  path   = "${dirname(find_in_parent_folders())}/accelerator/_envcommon/gitlab_integration.hcl"
+  path   = "${dirname(find_in_parent_folders())}/accelerator/_envcommon/ai_handler.hcl"
   expose = true
 }
 skip =  include.envcommon.inputs.ai_handler_create ? false : true

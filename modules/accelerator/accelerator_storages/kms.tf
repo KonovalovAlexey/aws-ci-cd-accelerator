@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 
 module "kms" {
   source                  = "terraform-aws-modules/kms/aws"
-  version                 = "1.5.0"
+  version                 = "2.1.0"
   description             = "Primery key for ${var.repo_name}"
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -12,13 +12,11 @@ module "kms" {
 
   # Policy
   enable_default_policy = true
-  #  key_owners                             = ["arn:aws:iam::012345678901:role/owner"]
-  #  key_administrators                     = ["arn:aws:iam::012345678901:role/admin"]
-  #  key_users             = var.key_users
-  key_service_users     = var.key_service_users
-  key_statements        = [
+
+  key_service_users = var.key_service_users
+  key_statements = [
     {
-      sid     = "EventBridge"
+      sid = "EventBridge"
       actions = [
         "kms:Decrypt*",
         "kms:GenerateDataKey*"
@@ -54,14 +52,14 @@ module "kms" {
         {
           test     = "ArnLike"
           variable = "kms:EncryptionContext:aws:logs:arn"
-          values   = [
+          values = [
             "arn:aws:logs:*:*:log-group:*",
           ]
         }
       ]
     },
     {
-      sid     = "PipelineRoles"
+      sid = "PipelineRoles"
       actions = [
         "kms:Encrypt*",
         "kms:Decrypt*",
@@ -80,7 +78,7 @@ module "kms" {
 
       conditions = [
         {
-          test   = "StringLike"
+          test = "StringLike"
           values = [
             "arn:aws:iam::${var.aws_account_id}:role/Codebuild-${var.repo_name}*",
             "arn:aws:iam::${var.aws_account_id}:role/Codepipeline-${var.repo_name}*"
@@ -90,7 +88,7 @@ module "kms" {
       ]
     },
     {
-      sid     = "DeployRoles"
+      sid = "DeployRoles"
       actions = [
         "kms:Encrypt*",
         "kms:Decrypt*",

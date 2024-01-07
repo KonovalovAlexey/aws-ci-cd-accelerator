@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.20.4-alpine AS builder
+FROM golang:1.21.5-alpine AS builder
 
 RUN apk update && apk upgrade && apk add --no-cache curl
 
@@ -30,24 +30,30 @@ RUN curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scri
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
     install -o root -g root -m 0755 kubectl /bin/kubectl
 
+
 # Final stage
 FROM ghcr.io/runatlantis/atlantis:v0.27.0
 
-RUN apk update && apk upgrade && \
-    apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev curl python3 py3-pip && \
-    pip3 install --no-cache-dir awscli --upgrade && \
-    rm -rf /var/cache/apk/* /tmp/*
+USER root
 
-RUN pip3 install --upgrade setuptools && \
-    pip3 install -U checkov
+RUN apk update && apk upgrade && \
+    apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev curl python3 py3-pip aws-cli && \
+    ln -sf python3 /usr/bin/python && rm -rf /var/cache/apk/* /tmp/*
+
+USER atlantis
+COPY requirements.txt /home/atlantis/
+RUN python3 -m venv /home/atlantis/.venv && \
+    source /home/atlantis/.venv/bin/activate && \
+    pip install --upgrade setuptools -q && pip install -U -q checkov && \
+    pip install -r /home/atlantis/requirements.txt && \
+    deactivate
 ## Install Epam Custodian
-#COPY c7n*.zip /c7n/
-#RUN python3 -m venv /home/atlantis/.venv
-#RUN [ ! -d /c7n ] \
-# || (source /home/atlantis/.venv/bin/activate \
-# && pip install /c7n/c7n*.zip \
-# && rm -rf /c7n \
-# && deactivate)
+COPY c7n*.zip /c7n/
+RUN [ ! -d /c7n ] \
+ || (source /home/atlantis/.venv/bin/activate \
+ && pip install /c7n/c7n*.zip \
+ && rm -rf /c7n /var/cache/apk/* /tmp/* \
+ && deactivate)
 
 COPY --from=builder /go/bin/tfsec /usr/local/bin
 COPY --from=builder /bin/tflint /usr/local/bin/tflint

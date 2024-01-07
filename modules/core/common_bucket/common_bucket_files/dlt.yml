@@ -1,4 +1,4 @@
-Description: (SO0062) - Distributed Load Testing on AWS is a reference architecture to perform application load testing at scale. Version v3.2.2
+Description: (SO0062) - Distributed Load Testing on AWS is a reference architecture to perform application load testing at scale. Version v3.2.4
 AWSTemplateFormatVersion: "2010-09-09"
 Metadata:
   AWS::CloudFormation::Interface:
@@ -124,11 +124,11 @@ Rules:
 Mappings:
   Solution:
     Config:
-      CodeVersion: v3.2.2
-      ContainerImage: public.ecr.aws/aws-solutions/distributed-load-testing-on-aws-load-tester:v3.2.2
-      KeyPrefix: distributed-load-testing-on-aws/v3.2.2
+      CodeVersion: v3.2.4
+      ContainerImage: public.ecr.aws/aws-solutions/distributed-load-testing-on-aws-load-tester:v3.2.4
+      KeyPrefix: distributed-load-testing-on-aws/v3.2.4
       S3Bucket: solutions
-      SendAnonymousUsage: "Yes"
+      SendAnonymizedUsage: "Yes"
       SolutionId: SO0062
       URL: https://metrics.awssolutionsbuilder.com/generic
   ServiceprincipalMap:
@@ -152,6 +152,8 @@ Mappings:
       states: states.ap-southeast-2.amazonaws.com
     ap-southeast-3:
       states: states.ap-southeast-3.amazonaws.com
+    ap-southeast-4:
+      states: states.ap-southeast-4.amazonaws.com
     ca-central-1:
       states: states.ca-central-1.amazonaws.com
     cn-north-1:
@@ -174,6 +176,8 @@ Mappings:
       states: states.eu-west-2.amazonaws.com
     eu-west-3:
       states: states.eu-west-3.amazonaws.com
+    il-central-1:
+      states: states.il-central-1.amazonaws.com
     me-central-1:
       states: states.me-central-1.amazonaws.com
     me-south-1:
@@ -199,12 +203,12 @@ Mappings:
     us-west-2:
       states: states.us-west-2.amazonaws.com
 Conditions:
-  SendAnonymousUsage:
+  SendAnonymizedUsage:
     Fn::Equals:
       - Fn::FindInMap:
           - Solution
           - Config
-          - SendAnonymousUsage
+          - SendAnonymizedUsage
       - "Yes"
   CreateFargateVPCResources:
     Fn::Equals:
@@ -313,8 +317,6 @@ Resources:
   DLTVpcDLTSubnetAAE7DDEE8:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId:
-        Ref: DLTVpcDLTFargateVpc0E6FEAB7
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -328,12 +330,12 @@ Resources:
               - Solution
               - Config
               - SolutionId
+      VpcId:
+        Ref: DLTVpcDLTFargateVpc0E6FEAB7
     Condition: CreateFargateVPCResources
   DLTVpcDLTSubnetB294F4ED2:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId:
-        Ref: DLTVpcDLTFargateVpc0E6FEAB7
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -347,6 +349,8 @@ Resources:
               - Solution
               - Config
               - SolutionId
+      VpcId:
+        Ref: DLTVpcDLTFargateVpc0E6FEAB7
     Condition: CreateFargateVPCResources
   DLTVpcDLTFargateIG0E71BA5C:
     Type: AWS::EC2::InternetGateway
@@ -362,8 +366,6 @@ Resources:
   DLTVpcDLTFargateRT86406464:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId:
-        Ref: DLTVpcDLTFargateVpc0E6FEAB7
       Tags:
         - Key: SolutionId
           Value:
@@ -371,23 +373,25 @@ Resources:
               - Solution
               - Config
               - SolutionId
+      VpcId:
+        Ref: DLTVpcDLTFargateVpc0E6FEAB7
     Condition: CreateFargateVPCResources
   DLTVpcDLTGatewayattachment220D400F:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      VpcId:
-        Ref: DLTVpcDLTFargateVpc0E6FEAB7
       InternetGatewayId:
         Ref: DLTVpcDLTFargateIG0E71BA5C
+      VpcId:
+        Ref: DLTVpcDLTFargateVpc0E6FEAB7
     Condition: CreateFargateVPCResources
   DLTVpcDLTRouteF8F2A836:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId:
-        Ref: DLTVpcDLTFargateRT86406464
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId:
         Ref: DLTVpcDLTFargateIG0E71BA5C
+      RouteTableId:
+        Ref: DLTVpcDLTFargateRT86406464
     DependsOn:
       - DLTVpcDLTGatewayattachment220D400F
     Condition: CreateFargateVPCResources
@@ -461,8 +465,10 @@ Resources:
               - Solution
               - Config
               - SolutionId
+      VersioningConfiguration:
+        Status: Enabled
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -527,7 +533,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
   DLTConsoleResourcesDLTCloudFrontToS3S3BucketPolicyF90397AC:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -679,8 +685,10 @@ Resources:
               - Solution
               - Config
               - SolutionId
+      VersioningConfiguration:
+        Status: Enabled
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
   DLTTestRunnerStorageDLTScenariosBucketPolicy96221788:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -688,6 +696,23 @@ Resources:
         Ref: DLTTestRunnerStorageDLTScenariosBucketA9290D21
       PolicyDocument:
         Statement:
+          - Action: s3:*
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+            Effect: Deny
+            Principal:
+              AWS: "*"
+            Resource:
+              - Fn::GetAtt:
+                  - DLTTestRunnerStorageDLTScenariosBucketA9290D21
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - DLTTestRunnerStorageDLTScenariosBucketA9290D21
+                        - Arn
+                    - /*
           - Action: s3:*
             Condition:
               Bool:
@@ -735,13 +760,13 @@ Resources:
   DLTTestRunnerStorageDLTScenariosTableAB6F5C2A:
     Type: AWS::DynamoDB::Table
     Properties:
-      KeySchema:
-        - AttributeName: testId
-          KeyType: HASH
       AttributeDefinitions:
         - AttributeName: testId
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: testId
+          KeyType: HASH
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       SSESpecification:
@@ -754,21 +779,21 @@ Resources:
               - Config
               - SolutionId
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
   DLTTestRunnerStorageDLTHistoryTable46D850CC:
     Type: AWS::DynamoDB::Table
     Properties:
+      AttributeDefinitions:
+        - AttributeName: testId
+          AttributeType: S
+        - AttributeName: testRunId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: testId
           KeyType: HASH
         - AttributeName: testRunId
           KeyType: RANGE
-      AttributeDefinitions:
-        - AttributeName: testId
-          AttributeType: S
-        - AttributeName: testRunId
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       SSESpecification:
@@ -781,7 +806,7 @@ Resources:
               - Config
               - SolutionId
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
   DLTTestRunnerStorageHistoryDynamoDbPolicyA439CB46:
     Type: AWS::IAM::Policy
     Properties:
@@ -952,10 +977,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /main-custom-resource.zip
-      Role:
-        Fn::GetAtt:
-          - DLTCustomResourceInfraCustomResourceLambdaRoleCC09066C
-          - Arn
       Description: CFN Lambda backed custom resource to deploy assets to s3
       Environment:
         Variables:
@@ -981,7 +1002,11 @@ Resources:
           S3_BUCKET:
             Ref: DLTTestRunnerStorageDLTScenariosBucketA9290D21
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - DLTCustomResourceInfraCustomResourceLambdaRoleCC09066C
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -1234,7 +1259,7 @@ Resources:
           - UUID
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
-  DLTCustomResourcesAnonymousMetricE30E46B4:
+  DLTCustomResourcesAnonymizedMetric901872DA:
     Type: AWS::CloudFormation::CustomResource
     Properties:
       ServiceToken:
@@ -1248,7 +1273,7 @@ Resources:
           - false
       Region:
         Ref: AWS::Region
-      Resource: AnonymousMetric
+      Resource: AnonymizedMetric
       SolutionId:
         Fn::FindInMap:
           - Solution
@@ -1265,7 +1290,7 @@ Resources:
           - CodeVersion
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
-    Condition: SendAnonymousUsage
+    Condition: SendAnonymizedUsage
   DLTEcsDLTEcsClusterBC5CE23B:
     Type: AWS::ECS::Cluster
     Properties:
@@ -1335,7 +1360,7 @@ Resources:
   DLTEcsDLTCloudWatchLogsGroupFE9EC144:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 7
+      RetentionInDays: 365
       Tags:
         - Key: SolutionId
           Value:
@@ -1344,7 +1369,7 @@ Resources:
               - Config
               - SolutionId
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -1443,20 +1468,20 @@ Resources:
   DLTEcsDLTSecGroupEgressE1DA93E8:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
-      GroupId:
-        Ref: DLTEcsDLTEcsSecurityGroup69E6743C
-      IpProtocol: "-1"
       CidrIp:
         Ref: EgressCidr
       Description: Allow tasks to call out to external resources
+      GroupId:
+        Ref: DLTEcsDLTEcsSecurityGroup69E6743C
+      IpProtocol: "-1"
   DLTEcsDLTSecGroupIngressFA958E66:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      IpProtocol: tcp
       Description: Allow tasks to communicate
       FromPort: 50000
       GroupId:
         Ref: DLTEcsDLTEcsSecurityGroup69E6743C
+      IpProtocol: tcp
       SourceSecurityGroupId:
         Ref: DLTEcsDLTEcsSecurityGroup69E6743C
       ToPort: 50000
@@ -1514,10 +1539,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /real-time-data-publisher.zip
-      Role:
-        Fn::GetAtt:
-          - RealTimeDatarealTimeDataPublisherRoleA8976D01
-          - Arn
       Description: Real time data publisher
       Environment:
         Variables:
@@ -1538,7 +1559,11 @@ Resources:
               - Config
               - CodeVersion
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - RealTimeDatarealTimeDataPublisherRoleA8976D01
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -1623,10 +1648,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /results-parser.zip
-      Role:
-        Fn::GetAtt:
-          - DLTLambdaFunctionLambdaResultsRole2CF2D707
-          - Arn
       Description: Result parser for indexing xml test results to DynamoDB
       Environment:
         Variables:
@@ -1645,7 +1666,7 @@ Resources:
             Fn::FindInMap:
               - Solution
               - Config
-              - SendAnonymousUsage
+              - SendAnonymizedUsage
           SOLUTION_ID:
             Fn::FindInMap:
               - Solution
@@ -1661,7 +1682,11 @@ Resources:
               - Config
               - CodeVersion
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - DLTLambdaFunctionLambdaResultsRole2CF2D707
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -1776,10 +1801,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /task-runner.zip
-      Role:
-        Fn::GetAtt:
-          - DLTLambdaFunctionDLTTestLambdaTaskRole1FDBCEDD
-          - Arn
       Description: Task runner for ECS task definitions
       Environment:
         Variables:
@@ -1798,7 +1819,11 @@ Resources:
               - Config
               - CodeVersion
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - DLTLambdaFunctionDLTTestLambdaTaskRole1FDBCEDD
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -1895,10 +1920,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /task-canceler.zip
-      Role:
-        Fn::GetAtt:
-          - DLTLambdaFunctionLambdaTaskCancelerRoleAE2C84CF
-          - Arn
       Description: Stops ECS task
       Environment:
         Variables:
@@ -1920,7 +1941,11 @@ Resources:
           SCENARIOS_TABLE:
             Ref: DLTTestRunnerStorageDLTScenariosTableAB6F5C2A
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - DLTLambdaFunctionLambdaTaskCancelerRoleAE2C84CF
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -2018,10 +2043,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /task-status-checker.zip
-      Role:
-        Fn::GetAtt:
-          - DLTLambdaFunctionTaskStatusRole9288E645
-          - Arn
       Description: Task status checker
       Environment:
         Variables:
@@ -2042,7 +2063,11 @@ Resources:
               - Config
               - CodeVersion
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - DLTLambdaFunctionTaskStatusRole9288E645
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -2073,7 +2098,7 @@ Resources:
             - Fn::GetAtt:
                 - DLTCustomResourcesCustomResourceUuidD1C03F15
                 - SUFFIX
-      RetentionInDays: 7
+      RetentionInDays: 365
       Tags:
         - Key: SolutionId
           Value:
@@ -2082,7 +2107,7 @@ Resources:
               - Config
               - SolutionId
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -2194,50 +2219,46 @@ Resources:
   DLTStepFunctionTaskRunnerStepFunctionsC295A535:
     Type: AWS::StepFunctions::StateMachine
     Properties:
-      RoleArn:
-        Fn::GetAtt:
-          - DLTStepFunctionTaskRunnerStepFunctionsRoleC2237F06
-          - Arn
       DefinitionString:
         Fn::Join:
           - ""
-          - - '{"StartAt":"Regions for testing","States":{"Regions for testing":{"Type":"Map","ResultPath":null,"Next":"Parse result","InputPath":"$","Parameters":{"testTaskConfig.$":"$$.Map.Item.Value","testId.$":"$.testId","testType.$":"$.testType","fileType.$":"$.fileType","showLive.$":"$.showLive","testDuration.$":"$.testDuration","prefix.$":"$.prefix"},"Iterator":{"StartAt":"Check running tests","States":{"Check running tests":{"Next":"No running tests","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
+          - - '{"StartAt":"Regions for testing","States":{"Regions for testing":{"Type":"Map","ResultPath":null,"Next":"Parse result","InputPath":"$","Parameters":{"testTaskConfig.$":"$$.Map.Item.Value","testId.$":"$.testId","testType.$":"$.testType","fileType.$":"$.fileType","showLive.$":"$.showLive","testDuration.$":"$.testDuration","prefix.$":"$.prefix"},"Iterator":{"StartAt":"Check running tests","States":{"Check running tests":{"Next":"No running tests","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
                 - DLTLambdaFunctionTaskStatusChecker1AA63EC9
                 - Arn
-            - '","Payload.$":"$"}},"No running tests":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Run workers"}],"Default":"Test is still running"},"Test is still running":{"Type":"Fail","Error":"TestAlreadyRunning","Cause":"The same test is already running."},"Run workers":{"Next":"Requires leader?","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
+            - '","Payload.$":"$"}},"No running tests":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Run workers"}],"Default":"Test is still running"},"Test is still running":{"Type":"Fail","Error":"TestAlreadyRunning","Cause":"The same test is already running."},"Run workers":{"Next":"Requires leader?","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
                 - DLTLambdaFunctionTaskRunnerAAAD9171
                 - Arn
-            - '","Payload.$":"$"}},"Requires leader?":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Cancel Test"},{"Variable":"$.taskIds","IsPresent":false,"Next":"Wait specified test duration"}],"Default":"Wait 1 minute - worker status"},"Wait 1 minute - worker status":{"Type":"Wait","Comment":"Wait 1 minute to check task status again","Seconds":60,"Next":"Check worker status"},"Check worker status":{"Next":"Are all workers running?","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
+            - '","Payload.$":"$"}},"Requires leader?":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Cancel Test"},{"Variable":"$.taskIds","IsPresent":false,"Next":"Wait specified test duration"}],"Default":"Wait 1 minute - worker status"},"Wait 1 minute - worker status":{"Type":"Wait","Comment":"Wait 1 minute to check task status again","Seconds":60,"Next":"Check worker status"},"Check worker status":{"Next":"Are all workers running?","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
                 - DLTLambdaFunctionTaskStatusChecker1AA63EC9
                 - Arn
-            - '","Payload.$":"$"}},"Are all workers running?":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Cancel Test"},{"Variable":"$.numTasksRunning","NumericEqualsPath":"$.numTasksTotal","Next":"Run leader task"}],"Default":"Wait 1 minute - worker status"},"Cancel Test":{"Next":"Map End","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","ResultPath":null,"Resource":"arn:'
+            - '","Payload.$":"$"}},"Are all workers running?":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Cancel Test"},{"Variable":"$.numTasksRunning","NumericEqualsPath":"$.numTasksTotal","Next":"Run leader task"}],"Default":"Wait 1 minute - worker status"},"Cancel Test":{"Next":"Map End","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","ResultPath":null,"Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
                 - DLTLambdaFunctionTaskCanceler4E12BDA6
                 - Arn
-            - '","Payload.$":"$"}},"Run leader task":{"Next":"Wait specified test duration","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Catch":[{"ErrorEquals":["States.ALL"],"ResultPath":"$.error","Next":"Cancel Test"}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
+            - '","Payload.$":"$"}},"Run leader task":{"Next":"Wait specified test duration","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Catch":[{"ErrorEquals":["States.ALL"],"ResultPath":"$.error","Next":"Cancel Test"}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
                 - DLTLambdaFunctionTaskRunnerAAAD9171
                 - Arn
-            - '","Payload.$":"$"}},"Wait specified test duration":{"Type":"Wait","SecondsPath":"$.testDuration","Next":"Check task status"},"Check task status":{"Next":"Are all tasks done?","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
+            - '","Payload.$":"$"}},"Wait specified test duration":{"Type":"Wait","SecondsPath":"$.testDuration","Next":"Check task status"},"Check task status":{"Next":"Are all tasks done?","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","InputPath":"$","OutputPath":"$.Payload","Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
                 - DLTLambdaFunctionTaskStatusChecker1AA63EC9
                 - Arn
-            - '","Payload.$":"$"}},"Wait 1 minute - task status":{"Type":"Wait","Comment":"Wait 1 minute to check task status again","Seconds":60,"Next":"Check task status"},"Are all tasks done?":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Map End"}],"Default":"Wait 1 minute - task status"},"Map End":{"Type":"Pass","End":true}}},"ItemsPath":"$.testTaskConfig"},"Parse result":{"Next":"Done","Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","Resource":"arn:'
+            - '","Payload.$":"$"}},"Wait 1 minute - task status":{"Type":"Wait","Comment":"Wait 1 minute to check task status again","Seconds":60,"Next":"Check task status"},"Are all tasks done?":{"Type":"Choice","Choices":[{"Variable":"$.isRunning","BooleanEquals":false,"Next":"Map End"}],"Default":"Wait 1 minute - task status"},"Map End":{"Type":"Pass","End":true}}},"ItemsPath":"$.testTaskConfig"},"Parse result":{"Next":"Done","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","Resource":"arn:'
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
@@ -2253,6 +2274,10 @@ Resources:
                   - Arn
         IncludeExecutionData: false
         Level: ALL
+      RoleArn:
+        Fn::GetAtt:
+          - DLTStepFunctionTaskRunnerStepFunctionsRoleC2237F06
+          - Arn
       Tags:
         - Key: SolutionId
           Value:
@@ -2424,10 +2449,6 @@ Resources:
                   - Config
                   - KeyPrefix
               - /api-services.zip
-      Role:
-        Fn::GetAtt:
-          - DLTApiDLTAPIServicesLambdaRole4465EAA4
-          - Arn
       Description: API microservices for creating, updating, listing and deleting test scenarios
       Environment:
         Variables:
@@ -2446,7 +2467,7 @@ Resources:
             Fn::FindInMap:
               - Solution
               - Config
-              - SendAnonymousUsage
+              - SendAnonymizedUsage
           SOLUTION_ID:
             Fn::FindInMap:
               - Solution
@@ -2470,7 +2491,11 @@ Resources:
               - Config
               - CodeVersion
       Handler: index.handler
-      Runtime: nodejs16.x
+      Role:
+        Fn::GetAtt:
+          - DLTApiDLTAPIServicesLambdaRole4465EAA4
+          - Arn
+      Runtime: nodejs18.x
       Tags:
         - Key: SolutionId
           Value:
@@ -2531,7 +2556,7 @@ Resources:
   DLTApiAPILogsF7751EF3:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 7
+      RetentionInDays: 365
       Tags:
         - Key: SolutionId
           Value:
@@ -2540,7 +2565,7 @@ Resources:
               - Config
               - SolutionId
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     Metadata:
       cfn_nag:
         rules_to_suppress:
@@ -2633,7 +2658,7 @@ Resources:
               - Config
               - SolutionId
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
   DLTApiAccount80CB63FF:
     Type: AWS::ApiGateway::Account
     Properties:
@@ -2644,12 +2669,10 @@ Resources:
     DependsOn:
       - DLTApi0C903EB5
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
-  DLTApiDeployment098FF8885717e67f3e4712c50b31f4e78c9acc35:
+    DeletionPolicy: Retain
+  DLTApiDeployment098FF888cb409d5b175926be9719cf717cb2aab7:
     Type: AWS::ApiGateway::Deployment
     Properties:
-      RestApiId:
-        Ref: DLTApi0C903EB5
       Description:
         Fn::Join:
           - ""
@@ -2658,6 +2681,8 @@ Resources:
                 - Solution
                 - Config
                 - CodeVersion
+      RestApiId:
+        Ref: DLTApi0C903EB5
     DependsOn:
       - DLTApiAPIAllRequestValidator02C9D47F
       - DLTApiOPTIONS823B5F09
@@ -2684,8 +2709,6 @@ Resources:
   DLTApiDeploymentStageprodC81F8DCB:
     Type: AWS::ApiGateway::Stage
     Properties:
-      RestApiId:
-        Ref: DLTApi0C903EB5
       AccessLogSetting:
         DestinationArn:
           Fn::GetAtt:
@@ -2693,12 +2716,14 @@ Resources:
             - Arn
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}'
       DeploymentId:
-        Ref: DLTApiDeployment098FF8885717e67f3e4712c50b31f4e78c9acc35
+        Ref: DLTApiDeployment098FF888cb409d5b175926be9719cf717cb2aab7
       MethodSettings:
         - DataTraceEnabled: false
           HttpMethod: "*"
           LoggingLevel: INFO
           ResourcePath: /*
+      RestApiId:
+        Ref: DLTApi0C903EB5
       StageName: prod
       Tags:
         - Key: SolutionId
@@ -2718,15 +2743,9 @@ Resources:
   DLTApiOPTIONS823B5F09:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: OPTIONS
-      ResourceId:
-        Fn::GetAtt:
-          - DLTApi0C903EB5
-          - RootResourceId
-      RestApiId:
-        Ref: DLTApi0C903EB5
       ApiKeyRequired: false
       AuthorizationType: NONE
+      HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
           - ResponseParameters:
@@ -2743,6 +2762,12 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "200"
+      ResourceId:
+        Fn::GetAtt:
+          - DLTApi0C903EB5
+          - RootResourceId
+      RestApiId:
+        Ref: DLTApi0C903EB5
   DLTApiregionsC4EF9783:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -2756,13 +2781,9 @@ Resources:
   DLTApiregionsOPTIONSCB04B2B1:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: OPTIONS
-      ResourceId:
-        Ref: DLTApiregionsC4EF9783
-      RestApiId:
-        Ref: DLTApi0C903EB5
       ApiKeyRequired: false
       AuthorizationType: NONE
+      HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
           - ResponseParameters:
@@ -2779,15 +2800,15 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "200"
-  DLTApiregionsANY2B8B3A61:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: ANY
       ResourceId:
         Ref: DLTApiregionsC4EF9783
       RestApiId:
         Ref: DLTApi0C903EB5
+  DLTApiregionsANY2B8B3A61:
+    Type: AWS::ApiGateway::Method
+    Properties:
       AuthorizationType: AWS_IAM
+      HttpMethod: ANY
       Integration:
         ContentHandling: CONVERT_TO_TEXT
         IntegrationHttpMethod: POST
@@ -2813,6 +2834,10 @@ Resources:
           StatusCode: "200"
       RequestValidatorId:
         Ref: DLTApiAPIAllRequestValidator02C9D47F
+      ResourceId:
+        Ref: DLTApiregionsC4EF9783
+      RestApiId:
+        Ref: DLTApi0C903EB5
   DLTApiscenariosB6B76329:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -2826,13 +2851,9 @@ Resources:
   DLTApiscenariosOPTIONS6F514DA3:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: OPTIONS
-      ResourceId:
-        Ref: DLTApiscenariosB6B76329
-      RestApiId:
-        Ref: DLTApi0C903EB5
       ApiKeyRequired: false
       AuthorizationType: NONE
+      HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
           - ResponseParameters:
@@ -2849,15 +2870,15 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "200"
-  DLTApiscenariosANYDEF83622:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: ANY
       ResourceId:
         Ref: DLTApiscenariosB6B76329
       RestApiId:
         Ref: DLTApi0C903EB5
+  DLTApiscenariosANYDEF83622:
+    Type: AWS::ApiGateway::Method
+    Properties:
       AuthorizationType: AWS_IAM
+      HttpMethod: ANY
       Integration:
         ContentHandling: CONVERT_TO_TEXT
         IntegrationHttpMethod: POST
@@ -2883,6 +2904,10 @@ Resources:
           StatusCode: "200"
       RequestValidatorId:
         Ref: DLTApiAPIAllRequestValidator02C9D47F
+      ResourceId:
+        Ref: DLTApiscenariosB6B76329
+      RestApiId:
+        Ref: DLTApi0C903EB5
   DLTApiscenariostestId4C170989:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -2894,13 +2919,9 @@ Resources:
   DLTApiscenariostestIdOPTIONS0B339CE6:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: OPTIONS
-      ResourceId:
-        Ref: DLTApiscenariostestId4C170989
-      RestApiId:
-        Ref: DLTApi0C903EB5
       ApiKeyRequired: false
       AuthorizationType: NONE
+      HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
           - ResponseParameters:
@@ -2917,15 +2938,15 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "200"
-  DLTApiscenariostestIdANY993028D3:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: ANY
       ResourceId:
         Ref: DLTApiscenariostestId4C170989
       RestApiId:
         Ref: DLTApi0C903EB5
+  DLTApiscenariostestIdANY993028D3:
+    Type: AWS::ApiGateway::Method
+    Properties:
       AuthorizationType: AWS_IAM
+      HttpMethod: ANY
       Integration:
         ContentHandling: CONVERT_TO_TEXT
         IntegrationHttpMethod: POST
@@ -2951,6 +2972,10 @@ Resources:
           StatusCode: "200"
       RequestValidatorId:
         Ref: DLTApiAPIAllRequestValidator02C9D47F
+      ResourceId:
+        Ref: DLTApiscenariostestId4C170989
+      RestApiId:
+        Ref: DLTApi0C903EB5
   DLTApitasks0A512C83:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -2964,13 +2989,9 @@ Resources:
   DLTApitasksOPTIONSDABED809:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: OPTIONS
-      ResourceId:
-        Ref: DLTApitasks0A512C83
-      RestApiId:
-        Ref: DLTApi0C903EB5
       ApiKeyRequired: false
       AuthorizationType: NONE
+      HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
           - ResponseParameters:
@@ -2987,15 +3008,15 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "200"
-  DLTApitasksANY60403A44:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: ANY
       ResourceId:
         Ref: DLTApitasks0A512C83
       RestApiId:
         Ref: DLTApi0C903EB5
+  DLTApitasksANY60403A44:
+    Type: AWS::ApiGateway::Method
+    Properties:
       AuthorizationType: AWS_IAM
+      HttpMethod: ANY
       Integration:
         ContentHandling: CONVERT_TO_TEXT
         IntegrationHttpMethod: POST
@@ -3021,6 +3042,10 @@ Resources:
           StatusCode: "200"
       RequestValidatorId:
         Ref: DLTApiAPIAllRequestValidator02C9D47F
+      ResourceId:
+        Ref: DLTApitasks0A512C83
+      RestApiId:
+        Ref: DLTApi0C903EB5
   DLTApivCPUDetailsABB0980D:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -3034,13 +3059,9 @@ Resources:
   DLTApivCPUDetailsOPTIONS8854EB1F:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: OPTIONS
-      ResourceId:
-        Ref: DLTApivCPUDetailsABB0980D
-      RestApiId:
-        Ref: DLTApi0C903EB5
       ApiKeyRequired: false
       AuthorizationType: NONE
+      HttpMethod: OPTIONS
       Integration:
         IntegrationResponses:
           - ResponseParameters:
@@ -3057,15 +3078,15 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "200"
-  DLTApivCPUDetailsANY4E680392:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: ANY
       ResourceId:
         Ref: DLTApivCPUDetailsABB0980D
       RestApiId:
         Ref: DLTApi0C903EB5
+  DLTApivCPUDetailsANY4E680392:
+    Type: AWS::ApiGateway::Method
+    Properties:
       AuthorizationType: AWS_IAM
+      HttpMethod: ANY
       Integration:
         ContentHandling: CONVERT_TO_TEXT
         IntegrationHttpMethod: POST
@@ -3091,6 +3112,10 @@ Resources:
           StatusCode: "200"
       RequestValidatorId:
         Ref: DLTApiAPIAllRequestValidator02C9D47F
+      ResourceId:
+        Ref: DLTApivCPUDetailsABB0980D
+      RestApiId:
+        Ref: DLTApi0C903EB5
   DLTApiApiAccountConfigBF306CC3:
     Type: AWS::ApiGateway::Account
     Properties:
@@ -3233,8 +3258,6 @@ Resources:
   DLTCognitoAuthDLTUserPoolClientA2F8B2DB:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      UserPoolId:
-        Ref: DLTCognitoAuthDLTUserPoolFA41A712
       AllowedOAuthFlows:
         - implicit
         - code
@@ -3262,6 +3285,8 @@ Resources:
         - COGNITO
       TokenValidityUnits:
         RefreshToken: minutes
+      UserPoolId:
+        Ref: DLTCognitoAuthDLTUserPoolFA41A712
       WriteAttributes:
         - address
         - email
@@ -3429,8 +3454,6 @@ Resources:
   DLTCognitoAuthCognitoUser8FAEDC59:
     Type: AWS::Cognito::UserPoolUser
     Properties:
-      UserPoolId:
-        Ref: DLTCognitoAuthDLTUserPoolFA41A712
       DesiredDeliveryMediums:
         - EMAIL
       ForceAliasCreation: true
@@ -3443,18 +3466,20 @@ Resources:
             Ref: AdminName
         - Name: email_verified
           Value: "true"
+      UserPoolId:
+        Ref: DLTCognitoAuthDLTUserPoolFA41A712
       Username:
         Ref: AdminName
   AppRegistry968496A3:
     Type: AWS::ServiceCatalogAppRegistry::Application
     Properties:
+      Description: Service Catalog application to track and manage all your resources for the solution Distributed Load Testing
       Name:
         Fn::Join:
           - "-"
           - - distributed-load-testing-on-aws
             - Ref: AWS::Region
             - Ref: AWS::AccountId
-      Description: Service Catalog application to track and manage all your resources for the solution Distributed Load Testing
       Tags:
         SolutionId:
           Fn::FindInMap:
@@ -3510,9 +3535,9 @@ Resources:
             - Config
             - SolutionId
         solutionName: Distributed Load Testing
+      Description: Attribute group for solution information
       Name:
         Ref: AWS::StackName
-      Description: Attribute group for solution information
       Tags:
         SolutionId:
           Fn::FindInMap:
@@ -3522,7 +3547,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAA/3VU227bMAz9lr0raptiwR6XpksRoEGDpOseC0VmHDay5OnSIjD876PkS9xkfbGOKPOQIg815tWP7/z6m/hwI5kdRgq3vNp4IQ9sttMrYUUBHmzcrIOCuC5FWaLOI5wZnaFHoxn5v1Ygx7wi88tqFk83YavBR7TQxEH4QXj4EMfEZoKHZ7FtOMmjPZt6Cr4vQPv+rxPXyWnqnJEoUux4DDJY9McHa0J5YfiVW3DuwrzQyV4zFAWvVkahTKm1aG2a3OJaM3fLq7sgD+DvhAPWwHjcomY5kQz3NZPKhGxnjfa8ukfnLW5Dyv3JYo56KiUlssjo1pRcqmx0mEeHr/4Y0tQsO2pRmIya19c0gZopUWwzwat50LIr1xCvwBboXGIB6VIDZyq4tuvPwh3uYYcam0DK5PTPo8n7UveYeuSkxTL+OEfVElxaqZgeyl2bA7FtAt0OMrYS1KU/Aqmue4MSGEmNzQUqRor0sCRhoG7kMNif0b16ytjxx3TthX43B2CixLyRF6/W4Py0xNTZE6T6mkCau4dSmWMnv8GOIuZdaALkaoKVkMSwBL83WZqNBnWnbZAGr+FvoIAvQmEmvGlm6sxGWjSenzQoTU6FN7z67cCujFHRqccdmClsE760dJLpnIf7qOzP89b5x5XqCvad2iCFF9R2GnsLeVTdMYlkWpaUYz+CRJTkCEkMZ/PZFeHM/NmnrgeFIwGa4r91JPwUfBl8zW7H9HT9jG+XMypNAr1i9PE2SO+u0qPWT96IRvg0Vs9mc8smE34zEqrci46H3sDk9uXV29+r4e0vrqFNBvzNXb3fTPj4mrjfHOLIksCwAL5u1n+HlyAnewUAAA==
+      Analytics: v2:deflate64:H4sIAAAAAAAA/3VUTU/jMBD9LdxdQ2GFOG5pt6gSiKpl2SNynWk61LGz/gBVUf77jp2kCe1yiZ/HnjfjmTe55tX46o4+F+LTjWS2Hync8Grthdyz6VYvhRUFeLBxswoK4vokyhJ1HuHU6Aw9Gs3I/60Cec0rMr8up/F0HTYafEQLTRyEH4SHT3FIbCZ4eBGbhpM82rOJp+C7ArQ/3uq5eqeJc0aiSLHjMchg0R8erAnlmeFXbsG5M/NCJ3vNUBS8WhqFMqXWopVpcotrzdwNr+6D3IO/Fw5YA+Nxi5qlJxnuayaVCdnWGu15NUPnLW5Cyv3ZYo56IiUlssjo1ZRcqmx0mEeH724MaWqWHbQoTEbNO9Y0gZopUWwywat50LIr1xAvwRboXGIB6VIDpyq4tusvwu1nsEWNTSBlcrrzaPJjqY+YeuSkxTJenKNqCc6tVEwP5bbNgdjWgV4HGVsK6tIfgVTXnUEJjKTG5gIVI0V6eCJhoG7kMNif0L15ytjxx/Tshf4we2CixLyRF69W4PykxNTZHlJ9TSDNzaBU5tDJb7CjiHkXmgC5mmAlJDE8gd+ZLM1Gg7rTNkiDV/A3UMBXoTAT3jQzdWIjLRrPew1Kk1PhDa9+O7BLY1R0OuIOTBW2CZ9bOsl0zsN9VPbXeev840p1BftBbZDCC2o7jb2FPKrukEQyKUvK8TiCRJTkCEkMJ/PZFeHE/NWnrgeFIwGa4r91JPwcfBl8za5GQpU7wa8ufrY/sMu4fpt3e70apn6Ww4/bjs8ZlcaLmOnjbZDepQD9OI/ov9DP6otZ39RMmwz4u7v8GN/x8S0fX7w7xJEleWEBfNWs/wB0Q5t3ewUAAA==
     Condition: CDKMetadataAvailable
 Outputs:
   DLTApiEndpointD98B09AC:
@@ -3538,19 +3563,6 @@ Outputs:
           - /
           - Ref: DLTApiDeploymentStageprodC81F8DCB
           - /
-  AppRegistryApplicationManagerUrl775D5C3D:
-    Description: Application manager url for the application created.
-    Value:
-      Fn::Join:
-        - ""
-        - - https://
-          - Ref: AWS::Region
-          - .console.aws.amazon.com/systems-manager/appmanager/application/AWS_AppRegistry_Application-
-          - Fn::Join:
-              - "-"
-              - - distributed-load-testing-on-aws
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
   Console:
     Description: Console URL
     Value:
@@ -3589,9 +3601,3 @@ Outputs:
   DistributionId:
     Description: Cloudfront Destribution Id
     Value: !Ref DLTConsoleResourcesDLTCloudFrontToS3CloudFrontDistribution3EF384B4
-  Bucket1:
-    Value: !Ref DLTConsoleResourcesDLTCloudFrontToS3S3Bucket4FED8B63
-  Bucket2:
-    Value: !Ref DLTCommonResourcesLogsBucket48A2774D
-  Bucket3:
-    Value: !Ref DLTTestRunnerStorageDLTScenariosBucketA9290D21

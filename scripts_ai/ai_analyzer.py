@@ -38,7 +38,7 @@ def read_file_content(file_name, terraform_full_path):
 def process_log_and_extract_errors(error_log):
     prefix_pattern = r'level=\w+ msg=Terraform invocation failed in (.+\.terragrunt-cache[^\s]+)'
     error_pattern = r'(Error:.+?)(?=Error:|$)'
-    file_pattern = r'on (\S+) line \d+, in resource .+\n *\d+: *'
+    file_pattern = r'on (\S+\.tf)? ?line \d+.*\n *\d+: *'
     module_pattern = re.compile(r"modules/(.*)")
     prefix_matches = re.findall(prefix_pattern, error_log)
     error_matches = re.findall(error_pattern, error_log, flags=re.DOTALL)
@@ -201,14 +201,15 @@ def main():
         error_fix = communicate_with_ai(api_endpoint, api_key, origin_file, error, file_name, full_file_path,
                                         file_in_module)
         print(f'Solution provided by AI: {error_fix}')
-        comment = f"{error_fix}"
-        leave_pull_request_comment(access_token, repo_owner, repo_name, current_pull_request_number, comment, file_name)
+        # comment = f"{error_fix}"
+        # leave_pull_request_comment(access_token, repo_owner, repo_name, current_pull_request_number, comment, file_name)
 
     ai_branches_count = detect_ai_branches(access_token, repo_owner, repo_name, head_branch_name, g)
     if ai_branches_count >= limit_of_ai_iteration:
         comment = f"AI analyzer limited by {limit_of_ai_iteration} attempts. Please try to fix the issue manually."
         print(f"AI analyzer limited by {limit_of_ai_iteration} attempts. Please try to fix the issue manually.")
         leave_pull_request_comment(access_token, repo_owner, repo_name, current_pull_request_number, comment)
+        exit(1)
     else:
         ai_branches_count += 1  # Number of iteration starts from 1 (instead of 0)
         ai_branches_count = f"{ai_branches_count:03d}"
@@ -217,7 +218,7 @@ def main():
         base_repo_owner = repo_owner
         base_repo_name = repo_name
         head_branch = new_branch_name
-        title = f"{head_branch}: AI Proposal"
+        title = f"refactor(AI Proposal): {head_branch}"
         body = "Pull Request Created by AI"
 
         new_pull_request_number = create_new_pull_request(access_token, base_repo_owner, base_repo_name, head_branch,
@@ -226,6 +227,7 @@ def main():
         comment = f"A new pull request has been created with a number #{new_pull_request_number}"
 
         leave_pull_request_comment(access_token, base_repo_owner, base_repo_name, current_pull_request_number, comment)
+        exit(1)
 
 
 if __name__ == "__main__":

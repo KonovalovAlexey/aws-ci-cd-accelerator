@@ -1,9 +1,7 @@
 variable "repo_name" {
   type = string
 }
-variable "codepipeline_arn" {
-  type = string
-}
+
 variable "codepipeline_name" {
   type = string
 }

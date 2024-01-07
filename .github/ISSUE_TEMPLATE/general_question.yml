@@ -11,7 +11,7 @@ body:
   - type: textarea
     id: what-a-question
     attributes:
-      label: Description. What is your question??
+      label: Description. What is your question?
       description: Describe your question as detail as possible.
       placeholder: Tell us what your question is!
       value: "My question is ..."

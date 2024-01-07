@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "s3_artifact" {
     }
   }
 }
-module "s3-bucket-artifact" {
+module "s3_bucket_artifact" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "3.15.1"
 

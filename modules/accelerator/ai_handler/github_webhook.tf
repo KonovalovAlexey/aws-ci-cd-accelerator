@@ -1,7 +1,7 @@
 provider "github" {
   alias    = "ai_webhook"
   base_url = var.github_base_url
-  token    = data.aws_ssm_parameter.vcs_token.value
+  token    = var.github_token
   owner    = var.organization_name
 }
 

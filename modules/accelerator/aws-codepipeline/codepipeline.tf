@@ -65,21 +65,6 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
-#  stage {
-#    name = "Versioning"
-#    action {
-#      name             = "Tag"
-#      category         = "Build"
-#      owner            = "AWS"
-#      provider         = "CodeBuild"
-#      input_artifacts  = ["source"]
-#      output_artifacts = ["version"]
-#      version          = "1"
-#      configuration    = {
-#        ProjectName = aws_codebuild_project.version_project.name
-#      }
-#    }
-#  }
   stage {
     name = "Build"
     action {
@@ -87,7 +72,7 @@ resource "aws_codepipeline" "codepipeline" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["version"]
+      input_artifacts  = ["source"]
       output_artifacts = ["packaged"]
       version          = "1"
       configuration    = {

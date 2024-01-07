@@ -22,10 +22,10 @@ projects:
         - "**/*.hcl"
 
   - <<: *template_ci_cd
-    dir: terragrunt-infrastructure-live/accelerator/accounts/accelerator/regions/eu-central-1/applications/goapp/ci-cd
+    dir: <your-path-to-terragrunt-dir-ci-cd>
 
   - <<: *template_infra
-    dir: terragrunt-infrastructure-live/application-infrastructure/goapp/accounts/dev-qa-uat/regions/eu-central-1/infrastructure-module
+    dir: <your-path-to-terragrunt-dir-infrastructure-module
 
 # https://www.runatlantis.io/docs/server-side-repo-config.html#allow-repos-to-define-their-own-workflows
 workflows:
@@ -65,16 +65,14 @@ workflows:
             value: 1
         - env: # If we enable AI Handler
             name: AI_HANDLER
-            value: 1
+            value: 0
 
         - run: atlantis version
         - run: terraform version
+        - run: terragrunt --version
         - run: infracost --version
-        - run: pip3 --version
-        - run: python --version
-        - run: pip3 install virtualenv && python3 -m venv error_handeling
-        - run: source error_handeling/bin/activate && echo $VIRTUAL_ENV
-        - run: pip3 install -r /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/requirements.txt
+        - run: pip --version
+        - run: python3 --version
         - run: terragrunt validate -no-color 2> error_raw.log || cat error_raw.log | grep -v "validate_tflint" > error.log
         - run: if [ -s "error.log" ];
             then
@@ -82,7 +80,7 @@ workflows:
             fi
         - run: if [ $AI_HANDLER == 1 ] && [ -s "error.log" ];
             then
-            echo "Validate issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py && exit 1;
+            source /home/atlantis/.venv/bin/activate && echo "Validate issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py && deactivate;
             fi
         - run: terragrunt plan -out $PLANFILE $DESTROY_PARAMETER -no-color 2> error_raw.log || cat error_raw.log | grep -v "validate_tflint" > error.log
         - run: if [ -s "error.log" ];
@@ -91,12 +89,12 @@ workflows:
             fi
         - run: if [ $AI_HANDLER == 1 ] && [ -s "error.log" ];
             then
-            echo "Plan issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py;
+            source /home/atlantis/.venv/bin/activate && echo "Plan issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py && deactivate;
             fi
         - run: terragrunt show -json $PLANFILE > $SHOWFILE
         - run: if [ $CHECKOV == 1 ];
             then
-            echo "------ Checkov Report ------" && checkov -d . --quiet; echo "-------------------------------------";
+            echo "------ Checkov Report ------"; source /home/atlantis/.venv/bin/activate; checkov -d . --quiet; deactivate; echo "-------------------------------------";
             fi
         - run: if [ $TFSEC == 1 ];
             then
@@ -108,7 +106,7 @@ workflows:
             fi
         - run: if [ $AI_HANDLER == 1 ] && [ -s "regula_report.log" ] && ! grep -q "No problems found" regula_report.log;
             then
-            python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/regula_analyzer.py;
+            source /home/atlantis/.venv/bin/activate && echo "Regula issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/regula_analyzer.py && deactivate;
             fi
         - run: if [ $INFRACOST == 1 ];
             then
@@ -125,9 +123,6 @@ workflows:
             name: C7N_EPAM
             value: 0
         - env:
-            name: CUSTODIAN_ROLE
-            value: 'aws ssm get-parameter --name "/custodian/role/arn"  | jq .Parameter.Value -r'
-        - env:
             name: C7N_PASSWORD
             command: 'aws ssm get-parameter --name "/C7N/PASSWORD" --with-decryption | jq .Parameter.Value -r'
         - env:
@@ -137,20 +132,20 @@ workflows:
             name: C7N_USER
             command: 'aws ssm get-parameter --name "/C7N/user" --with-decryption | jq .Parameter.Value -r'
         - env:
-            name: ACCOUNT_NAME
-            value: atlantis
+            name: GITHUB_TOKEN
+            command: 'aws ssm get-parameter --name "/atlantis/github/user/token" --with-decryption | jq .Parameter.Value -r'
         - env:
             name: OPENAI_TOKEN
             command: 'aws ssm get-parameter --name "/accelerator/openai_token" --with-decryption | jq .Parameter.Value -r'
 
-        - run: terragrunt apply $PLANFILE -no-color 2> error_raw.log || cat error_raw.log | grep -v "validate_tflint" > error.log
+        - run: terragrunt apply $PLANFILE -no-color 2> error.log
         - run: if [ -s "error.log" ];
             then
             echo "Error log print" && cat error.log;
             fi
         - run: if [ $AI_HANDLER == 1 ] && [ -s "error.log" ];
             then
-            echo "Apply issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts/ai_analyzer.py;
+            source /home/atlantis/.venv/bin/activate && echo "Apply issue. Checking with OpenAI" && python3 /home/atlantis/.atlantis/repos/${BASE_REPO_OWNER}/${BASE_REPO_NAME}/${PULL_NUM}/${WORKSPACE}/scripts_ai/ai_analyzer.py && deactivate;
             fi
         - run: if [ $CUSTODIAN == 1 ];
             then

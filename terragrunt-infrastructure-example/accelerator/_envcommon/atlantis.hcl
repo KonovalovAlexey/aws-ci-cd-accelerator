@@ -51,7 +51,7 @@ dependency "vpc" {
     public_subnets  = ["subnet-1"]
     private_subnets = ["subnet-2"]
   }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
+  mock_outputs_allowed_terraform_commands = ["validate", "init", "plan", "destroy"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -66,25 +66,6 @@ inputs = merge(
     vpc_id                            = dependency.vpc.outputs.vpc_id
     public_subnet_ids                 = dependency.vpc.outputs.public_subnets
     private_subnet_ids                = dependency.vpc.outputs.private_subnets
-    #Custom environment variables for AWS Fargate task
-    custom_environment_secrets_gitlab = [
-      {
-        "name" : "GITLAB_TOKEN",
-        "valueFrom" : "/atlantis/gitlab/user/token"
-      }
-    ]
-    custom_environment_secrets_github = [
-      {
-        "name" : "GITHUB_TOKEN",
-        "valueFrom" : "/atlantis/github/user/token"
-      }
-    ]
-    custom_environment_secrets_bitbucket = [
-      {
-        "name" : "BITBUCKET_TOKEN",
-        "valueFrom" : "/atlantis/bitbucket/user/token"
-      }
-    ]
   }
 )
 

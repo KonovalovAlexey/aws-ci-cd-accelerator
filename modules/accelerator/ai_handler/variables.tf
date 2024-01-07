@@ -23,9 +23,6 @@ variable "bitbucket_user" {
   type        = string
   default     = ""
 }
-#variable "location" {
-#  type = string
-#}
 
 variable "github_base_url" {
   description = "GitHub base URL to use when creating a webhook (for GitHub Enterprise users)"
@@ -47,4 +44,8 @@ variable "openai_token_name" {
 variable "github_token_name" {
   type        = string
   description = "Parameter Store Variable Name for GitHub"
+}
+variable "github_token" {
+  type        = string
+  description = "GitHub Token"
 }

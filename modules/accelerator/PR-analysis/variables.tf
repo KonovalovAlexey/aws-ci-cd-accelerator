@@ -1,8 +1,3 @@
-variable "region" {
-  description = "The AWS region to deploy the resources"
-  type        = string
-}
-
 variable "vpc_id" {
   description = "The ID of the VPC to deploy resources"
   type        = string
@@ -70,17 +65,14 @@ variable "sonarcloud_token_name" {
 
 variable "codeartifact_domain" {
   description = "The CodeArtifact domain name"
+  type        = string
   default     = ""
 }
 
 variable "codeartifact_repo" {
   description = "The CodeArtifact repository name"
-  default     = ""
-}
-
-variable "region_name" {
-  description = "The name of the AWS region to deploy resources"
   type        = string
+  default     = ""
 }
 
 variable "aws_kms_key_arn" {

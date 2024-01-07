@@ -47,8 +47,8 @@ dependency "vpc" {
   mock_outputs = {
     vpc_id                      = "temporary-dummy-id"
     vpc_cidr_block              = "10.0.0.0/16"
-    private_subnets             = ["subnet-1"]
-    private_subnets_cidr_blocks = ["10.0.0.0/24"]
+    private_subnets             = ["subnet-1", "subnet-2"]
+    private_subnets_cidr_blocks = ["10.0.0.0/24", "10.0.1.0/24"]
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
 }
